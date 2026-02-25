@@ -1,5 +1,6 @@
 <template>
   <div>
+<<<<<<< HEAD
     <NuxtRouteAnnouncer/>
     <div>
       <NuxtLink class="nuxt-link" to="/">Home</NuxtLink>
@@ -7,6 +8,11 @@
     </div>
     <h1>Welcome to My Nuxt.js App</h1>
     <p>This is the main page of our Nuxt.js application.</p>
+=======
+    <NuxtLayout>
+      <NuxtPage></NuxtPage>
+    </NuxtLayout>
+>>>>>>> b9dadf8d5282ceb612094228a95077cb6f53a064
   </div>
 </template>
 
