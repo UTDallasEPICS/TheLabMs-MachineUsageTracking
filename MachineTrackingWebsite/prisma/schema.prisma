@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// models converted from existing SQL schema
+
+enum Role {
+  admin
+  user
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  username   String   @unique
+  email      String   @unique
+  password   String
+  role       Role
+  approved   Boolean  @default(false)
+  created_at DateTime @default(now())
+}
+
+model Microcontroller {
+  id            Int           @id @default(autoincrement())
+  name          String
+  type          String
+  api_key       Int           @unique
+  battery_level Int
+  created_at    DateTime      @default(now())
+  sensor_data   SensorData[]  @relation("MicrocontrollerData")
+
+}
+
+model SensorData {
+  id                 Int             @id @default(autoincrement())
+  microcontroller    Microcontroller @relation("MicrocontrollerData", fields: [microcontroller_id], references: [id], onDelete: Cascade)
+  microcontroller_id Int
+  machine_state      Boolean  
+  timestamp          DateTime        @default(now())
+
+  @@index([microcontroller_id, timestamp], name: "idx_microcontroller_time")
+}
+
+
+
+
+
