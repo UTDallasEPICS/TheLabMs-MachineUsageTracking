@@ -1,0 +1,72 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Dark Theme Palette */
+  --bg-color: #0f172a;       /* Slate 900 */
+  --surface-color: #1e293b;  /* Slate 800 */
+  --surface-hover: #334155;  /* Slate 700 */
+  --primary-color: #38bdf8;  /* Sky 400 */
+  --primary-hover: #0ea5e9;  /* Sky 500 */
+  --secondary-color: #818cf8; /* Indigo 400 */
+  --text-primary: #f1f5f9;   /* Slate 100 */
+  --text-secondary: #94a3b8; /* Slate 400 */
+  --border-color: #334155;   /* Slate 700 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Gradients */
+  --header-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+ul {
+  list-style: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-color); 
+}
+ 
+::-webkit-scrollbar-thumb {
+  background: var(--surface-hover); 
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary); 
+}
