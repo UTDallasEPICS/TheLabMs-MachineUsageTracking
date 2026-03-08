@@ -64,17 +64,18 @@ async function register() {
   min-height: calc(100vh - 180px);
   display: grid;
   place-items: center;
-  padding: 1.25rem;
+  padding: 1.5rem;
 }
 
 .auth-card {
-  width: min(460px, 100%);
+  width: min(500px, 100%);
   display: grid;
-  gap: 0.85rem;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.65);
-  padding: 1.2rem;
+  gap: 1rem;
+  border: 1px solid rgba(128, 176, 224, 0.26);
+  border-radius: 14px;
+  background: var(--surface-elevated);
+  padding: 1.4rem;
+  box-shadow: 0 16px 38px rgba(3, 9, 17, 0.34);
 }
 
 .auth-card h1,
@@ -88,28 +89,33 @@ async function register() {
 }
 
 .auth-card input {
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 8px;
-  padding: 0.55rem 0.65rem;
-  background: rgba(2, 6, 23, 0.8);
-  color: #e2e8f0;
+  border: 1px solid rgba(128, 176, 224, 0.28);
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
+  background: rgba(8, 23, 40, 0.9);
+  color: var(--text-primary);
+}
+
+.auth-card input:focus {
+  outline: none;
+  border-color: rgba(128, 176, 224, 0.6);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .auth-card button {
-  border: 0;
-  border-radius: 8px;
-  padding: 0.58rem 0.7rem;
-  background: #0ea5e9;
-  color: #082f49;
+  border: 1px solid rgba(128, 176, 224, 0.35);
+  border-radius: 10px;
+  padding: 0.65rem 0.9rem;
+  background: linear-gradient(145deg, rgba(128, 176, 224, 0.85), rgba(224, 16, 64, 0.72));
+  color: var(--text-primary);
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+  transition: filter 0.2s ease, box-shadow 0.2s ease;
 }
 
 .auth-card button:hover:not(:disabled) {
-  transform: translateY(-1px);
   filter: brightness(1.06);
-  box-shadow: 0 6px 14px rgba(14, 165, 233, 0.25);
+  box-shadow: 0 8px 20px rgba(128, 176, 224, 0.25);
 }
 
 .auth-card button:disabled {
@@ -118,15 +124,22 @@ async function register() {
 }
 
 .auth-error {
-  color: #fca5a5;
+  color: var(--secondary-color);
 }
 
 .auth-success {
-  color: #86efac;
+  color: var(--primary-hover);
 }
 
 .auth-link {
-  color: #7dd3fc;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
   text-decoration: none;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
+.auth-link:hover {
+  color: var(--text-primary);
 }
 </style>

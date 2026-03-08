@@ -78,8 +78,8 @@ const handleConfirm = () => {
 }
 
 .modal {
-  background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(16, 38, 58, 0.96);
+  border: 1px solid rgba(128, 176, 224, 0.28);
   border-radius: 20px;
   padding: 2rem;
   width: 100%;
@@ -98,7 +98,7 @@ const handleConfirm = () => {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #38bdf8, #818cf8, #34d399);
+  background: linear-gradient(90deg, rgba(128, 176, 224, 0.75), rgba(224, 16, 64, 0.65));
 }
 
 .modal__title {
@@ -135,7 +135,7 @@ const handleConfirm = () => {
 }
 
 .required {
-  color: #f87171;
+  color: #ff8aa9;
 }
 
 .form-group input {
@@ -143,8 +143,8 @@ const handleConfirm = () => {
   padding: 0.6rem 0.9rem;
   font-size: 0.9rem;
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 23, 40, 0.88);
+  border: 1px solid rgba(128, 176, 224, 0.24);
   border-radius: 10px;
   color: inherit;
   outline: none;
@@ -157,8 +157,8 @@ const handleConfirm = () => {
 }
 
 .form-group input:focus {
-  border-color: rgba(56, 189, 248, 0.6);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+  border-color: rgba(128, 176, 224, 0.6);
+  box-shadow: 0 0 0 3px rgba(128, 176, 224, 0.16);
 }
 
 /* ── Actions ── */
@@ -175,7 +175,7 @@ const handleConfirm = () => {
   font-weight: 600;
   font-family: inherit;
   border-radius: 99px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(128, 176, 224, 0.22);
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -185,7 +185,7 @@ const handleConfirm = () => {
 
 .btn-cancel:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(128, 176, 224, 0.1);
 }
 
 .btn-confirm {
@@ -195,21 +195,20 @@ const handleConfirm = () => {
   font-family: inherit;
   border: none;
   border-radius: 99px;
-  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  background: linear-gradient(135deg, rgba(128, 176, 224, 0.95), rgba(224, 16, 64, 0.75));
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 2px 12px rgba(56, 189, 248, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 2px 12px rgba(128, 176, 224, 0.35);
+  transition: box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .btn-confirm:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5);
+  box-shadow: 0 6px 20px rgba(128, 176, 224, 0.45);
   filter: brightness(1.1);
 }
 
 .btn-confirm:active {
-  transform: scale(0.97);
+  filter: brightness(0.98);
 }
 
 /* ── Animations ── */

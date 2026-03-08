@@ -25,12 +25,13 @@ async function logout() {
 .navbar {
   display: flex;
   align-items: center;
-  min-height: 2.1rem;
+  min-height: 2.8rem;
 }
 
 .navbar-list {
   display: flex;
-  gap: 2rem;
+  gap: 0.85rem;
+  flex-wrap: wrap;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -47,12 +48,13 @@ async function logout() {
   justify-content: center;
   color: var(--text-secondary);
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 1.08rem;
   line-height: 1;
-  height: 2.1rem;
-  padding: 0.5rem 1rem;
+  height: 2.75rem;
+  padding: 0.65rem 1.3rem;
   border-radius: 99px;
-  transition: all 0.25s ease;
+  border: 1px solid transparent;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   text-decoration: none;
   white-space: nowrap;
@@ -61,13 +63,15 @@ async function logout() {
 
 .navbar-link:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
-  transform: translateY(-1px);
+  background: rgba(128, 176, 224, 0.1);
+  border-color: rgba(128, 176, 224, 0.18);
+  box-shadow: 0 0 0 1px rgba(128, 176, 224, 0.08);
 }
 
 .navbar-link.router-link-active {
-  color: var(--primary-color);
-  background: rgba(56, 189, 248, 0.1);
+  color: var(--text-primary);
+  background: linear-gradient(145deg, rgba(128, 176, 224, 0.16), rgba(128, 176, 224, 0.07));
+  border-color: rgba(128, 176, 224, 0.26);
   font-weight: 600;
 }
 
@@ -79,9 +83,9 @@ async function logout() {
   transform: translateX(-50%);
   width: 4px;
   height: 4px;
-  background: var(--primary-color);
+  background: var(--secondary-color);
   border-radius: 50%;
-  opacity: 0; /* Hidden for now, maybe nicer without it if using pill bg */
+  opacity: 0;
 }
 
 .navbar-button {
@@ -91,8 +95,31 @@ async function logout() {
   font: inherit;
   color: var(--text-secondary);
   line-height: inherit;
-  padding: 0.5rem 1rem;
+  padding: 0.65rem 1.3rem;
   appearance: none;
   -webkit-appearance: none;
+}
+
+@media (max-width: 900px) {
+  .navbar-list {
+    gap: 0.55rem;
+  }
+
+  .navbar-link {
+    height: 2.35rem;
+    padding: 0.52rem 0.95rem;
+    font-size: 0.98rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    width: 100%;
+  }
+
+  .navbar-list {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 </style>

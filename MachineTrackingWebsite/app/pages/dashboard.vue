@@ -150,18 +150,18 @@ const formatLastSignal = (value: string | null): string => {
   gap: 0.35rem;
   padding: 0.35rem 0.7rem;
   border-radius: 999px;
-  border: 1px solid rgba(125, 211, 252, 0.38);
-  background: rgba(14, 116, 144, 0.2);
+  border: 1px solid rgba(128, 176, 224, 0.38);
+  background: rgba(128, 176, 224, 0.14);
   font-size: 0.74rem;
-  color: #bae6fd;
+  color: var(--text-primary);
 }
 
 .live-dot {
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 999px;
-  background: #22d3ee;
-  box-shadow: 0 0 0 rgba(34, 211, 238, 0.7);
+  background: var(--primary-color);
+  box-shadow: 0 0 0 rgba(128, 176, 224, 0.62);
   animation: pulse-ring 1.8s ease-out infinite;
 }
 
@@ -173,19 +173,18 @@ const formatLastSignal = (value: string | null): string => {
   font-size: 0.85rem;
   font-weight: 700;
   font-family: inherit;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(128, 176, 224, 0.25);
   border-radius: 99px;
   background: transparent;
   color: inherit;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .refresh-btn:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.35);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.28);
+  background: rgba(128, 176, 224, 0.12);
+  border-color: rgba(128, 176, 224, 0.45);
+  box-shadow: 0 4px 14px rgba(8, 23, 40, 0.34);
 }
 
 .dashboard__title {
@@ -224,16 +223,16 @@ const formatLastSignal = (value: string | null): string => {
   align-items: center;
   gap: 0.4rem;
   padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(16, 38, 58, 0.54);
+  border: 1px solid rgba(128, 176, 224, 0.14);
   border-radius: 10px;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .stat-item:hover {
-  transform: translateY(-2px);
-  border-color: rgba(125, 211, 252, 0.35);
-  box-shadow: 0 10px 20px rgba(2, 6, 23, 0.22);
+  border-color: rgba(128, 176, 224, 0.28);
+  background: rgba(16, 38, 58, 0.7);
+  box-shadow: 0 10px 20px rgba(2, 6, 23, 0.22), 0 0 0 1px rgba(128, 176, 224, 0.08);
 }
 
 .status-row {
@@ -256,7 +255,7 @@ const formatLastSignal = (value: string | null): string => {
 }
 
 .status-off {
-  background: #ef4444;
+  background: var(--secondary-color);
 }
 
 .last-seen {
@@ -287,15 +286,34 @@ const formatLastSignal = (value: string | null): string => {
   .dashboard {
     padding: 1rem;
   }
+
+  .dashboard__header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .actions-row {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .stat-row {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-item {
+    align-items: flex-start;
+  }
 }
 
 @keyframes pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7);
+    box-shadow: 0 0 0 0 rgba(128, 176, 224, 0.62);
   }
 
   70% {
-    box-shadow: 0 0 0 8px rgba(34, 211, 238, 0);
+    box-shadow: 0 0 0 8px rgba(128, 176, 224, 0);
   }
 
   100% {

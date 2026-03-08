@@ -1,1 +1,1 @@
-export {}
+export { default } from '../app/middleware/admin'

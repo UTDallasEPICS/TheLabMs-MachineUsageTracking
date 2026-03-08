@@ -12,12 +12,12 @@
 
 <style scoped>
 .card {
-    background: var(--surface-color, #1e293b);
+    background: var(--surface-elevated, #10263a);
     border-radius: 16px;
     border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
     padding: 1.5rem;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    transition: border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
     overflow: hidden;
     /* Gradient top-border accent */
     position: relative;
@@ -30,13 +30,14 @@
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #38bdf8, #818cf8, #34d399);
+    background: linear-gradient(90deg, rgba(128, 176, 224, 0), rgba(128, 176, 224, 0.85), rgba(224, 16, 64, 0.7));
     border-radius: 16px 16px 0 0;
 }
 
 .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    border-color: rgba(128, 176, 224, 0.3);
+    background: rgba(16, 38, 58, 0.88);
+    box-shadow: 0 10px 30px rgba(3, 9, 17, 0.36), 0 0 0 1px rgba(128, 176, 224, 0.12);
 }
 
 .card_header {
@@ -59,20 +60,19 @@
     font-weight: 600;
     font-family: inherit;
     border-radius: 99px;
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    background: rgba(56, 189, 248, 0.08);
-    color: #38bdf8;
+    border: 1px solid rgba(128, 176, 224, 0.3);
+    background: rgba(128, 176, 224, 0.08);
+    color: var(--primary-color);
     cursor: pointer;
     transition: background 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
 }
 
 .card_body :deep(button:hover) {
-    background: rgba(56, 189, 248, 0.18);
-    border-color: rgba(56, 189, 248, 0.55);
-    transform: scale(1.04);
+    background: rgba(128, 176, 224, 0.16);
+    border-color: rgba(128, 176, 224, 0.52);
 }
 
 .card_body :deep(button:active) {
-    transform: scale(0.97);
+    filter: brightness(0.98);
 }
 </style>

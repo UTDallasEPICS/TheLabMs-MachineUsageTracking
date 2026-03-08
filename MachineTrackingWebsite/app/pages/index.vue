@@ -58,9 +58,9 @@ const isAdmin = computed(() => {
 .hero {
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(148, 163, 184, 0.2);
+    border: 1px solid rgba(128, 176, 224, 0.22);
     border-radius: 16px;
-    background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.88));
+    background: linear-gradient(145deg, rgba(16, 38, 58, 0.9), rgba(8, 23, 40, 0.9));
     padding: 1.6rem;
     isolation: isolate;
 }
@@ -69,9 +69,9 @@ const isAdmin = computed(() => {
     position: absolute;
     border-radius: 999px;
     filter: blur(26px);
-    opacity: 0.28;
+    opacity: 0.2;
     z-index: -1;
-    animation: drift 8s ease-in-out infinite;
+    animation: drift 10s ease-in-out infinite;
 }
 
 .hero__glow--one {
@@ -79,7 +79,7 @@ const isAdmin = computed(() => {
     height: 190px;
     right: -40px;
     top: -40px;
-    background: rgba(56, 189, 248, 0.45);
+    background: rgba(128, 176, 224, 0.4);
 }
 
 .hero__glow--two {
@@ -87,7 +87,7 @@ const isAdmin = computed(() => {
     height: 150px;
     left: -30px;
     bottom: -40px;
-    background: rgba(129, 140, 248, 0.4);
+    background: rgba(224, 16, 64, 0.22);
     animation-delay: -2.5s;
 }
 
@@ -133,25 +133,23 @@ const isAdmin = computed(() => {
 .btn--primary {
     background: var(--accent-gradient);
     color: white;
-    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.22);
+    box-shadow: 0 4px 14px rgba(128, 176, 224, 0.24);
 }
 
 .btn--primary:hover {
-    transform: translateY(-2px);
     filter: brightness(1.08);
-    box-shadow: 0 10px 24px rgba(56, 189, 248, 0.35);
+    box-shadow: 0 10px 24px rgba(128, 176, 224, 0.3);
 }
 
 .btn--ghost {
-    border: 1px solid rgba(148, 163, 184, 0.35);
+    border: 1px solid rgba(128, 176, 224, 0.3);
     color: var(--text-primary);
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(8, 23, 40, 0.5);
 }
 
 .btn--ghost:hover {
-    transform: translateY(-1px);
-    border-color: rgba(148, 163, 184, 0.62);
-    background: rgba(30, 41, 59, 0.55);
+    border-color: rgba(128, 176, 224, 0.52);
+    background: rgba(16, 38, 58, 0.64);
 }
 
 .quick-grid {
@@ -163,11 +161,11 @@ const isAdmin = computed(() => {
 .quick-card {
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(148, 163, 184, 0.2);
+    border: 1px solid rgba(128, 176, 224, 0.2);
     border-radius: 12px;
-    background: rgba(15, 23, 42, 0.65);
+    background: rgba(8, 23, 40, 0.68);
     padding: 1rem;
-    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+    transition: border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
 }
 
 .quick-card::before {
@@ -177,15 +175,15 @@ const isAdmin = computed(() => {
     right: 0;
     top: 0;
     height: 2px;
-    background: linear-gradient(90deg, rgba(56, 189, 248, 0), rgba(56, 189, 248, 0.8), rgba(129, 140, 248, 0));
+    background: linear-gradient(90deg, rgba(128, 176, 224, 0), rgba(128, 176, 224, 0.84), rgba(224, 16, 64, 0.48));
     opacity: 0;
     transition: opacity 0.22s ease;
 }
 
 .quick-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(148, 163, 184, 0.35);
-    box-shadow: 0 12px 24px rgba(2, 6, 23, 0.28);
+    border-color: rgba(128, 176, 224, 0.34);
+    background: rgba(10, 27, 46, 0.78);
+    box-shadow: 0 12px 24px rgba(2, 6, 23, 0.28), 0 0 0 1px rgba(128, 176, 224, 0.1);
 }
 
 .quick-card:hover::before {
@@ -200,6 +198,26 @@ const isAdmin = computed(() => {
 .quick-card p {
     color: var(--text-secondary);
     font-size: 0.92rem;
+}
+
+@media (max-width: 768px) {
+    .hero {
+        padding: 1.15rem;
+    }
+
+    .hero__subtitle {
+        font-size: 0.92rem;
+    }
+
+    .hero__actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn {
+        width: 100%;
+        min-height: 2.6rem;
+    }
 }
 
 @keyframes drift {
