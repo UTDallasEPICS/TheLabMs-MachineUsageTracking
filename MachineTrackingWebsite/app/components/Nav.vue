@@ -1,12 +1,12 @@
 <template>
   <nav class="navbar">
     <ul class="navbar-list">
-      <li><NuxtLink to="/" class="navbar-link">Home</NuxtLink></li>
-      <li><NuxtLink to="/dashboard" class="navbar-link">Dashboard</NuxtLink></li>
-      <li><NuxtLink to="/admin/login" class="navbar-link">Admin</NuxtLink></li>
-      <li v-if="!loggedIn"><NuxtLink to="/login" class="navbar-link">Login</NuxtLink></li>
-      <li v-if="!loggedIn"><NuxtLink to="/register" class="navbar-link">Register</NuxtLink></li>
-      <li v-if="loggedIn"><button class="navbar-link navbar-button" @click="logout">Logout</button></li>
+      <li class="navbar-item"><NuxtLink to="/" class="navbar-link">Home</NuxtLink></li>
+      <li class="navbar-item"><NuxtLink to="/dashboard" class="navbar-link">Dashboard</NuxtLink></li>
+      <li class="navbar-item"><NuxtLink to="/admin/login" class="navbar-link">Admin</NuxtLink></li>
+      <li v-if="!loggedIn" class="navbar-item"><NuxtLink to="/login" class="navbar-link">Login</NuxtLink></li>
+      <li v-if="!loggedIn" class="navbar-item"><NuxtLink to="/register" class="navbar-link">Register</NuxtLink></li>
+      <li v-if="loggedIn" class="navbar-item"><button type="button" class="navbar-link navbar-button" @click="logout">Logout</button></li>
     </ul>
   </nav>
 </template>
@@ -25,6 +25,7 @@ async function logout() {
 .navbar {
   display: flex;
   align-items: center;
+  min-height: 2.1rem;
 }
 
 .navbar-list {
@@ -35,14 +36,27 @@ async function logout() {
   list-style: none;
 }
 
+.navbar-item {
+  display: flex;
+  align-items: center;
+}
+
 .navbar-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-secondary);
   font-weight: 500;
   font-size: 0.95rem;
+  line-height: 1;
+  height: 2.1rem;
   padding: 0.5rem 1rem;
   border-radius: 99px;
   transition: all 0.3s ease;
   position: relative;
+  text-decoration: none;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .navbar-link:hover {
@@ -70,8 +84,14 @@ async function logout() {
 }
 
 .navbar-button {
-  border: 0;
-  background: transparent;
+  border: none;
+  background-color: transparent;
   cursor: pointer;
+  font: inherit;
+  color: var(--text-secondary);
+  line-height: inherit;
+  padding: 0.5rem 1rem;
+  appearance: none;
+  -webkit-appearance: none;
 }
 </style>
