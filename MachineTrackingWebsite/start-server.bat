@@ -27,6 +27,15 @@ if errorlevel 1 (
 echo Rebuilding dependencies to ensure native/build steps are applied...
 call pnpm rebuild --recursive >nul 2>&1
 
+echo Generating Prisma client...
+call pnpm prisma generate
+if errorlevel 1 (
+  echo [ERROR] Prisma generate failed.
+  echo If scripts are blocked, run: pnpm approve-builds
+  pause
+  exit /b 1
+)
+
 echo Starting Nuxt dev server...
 call pnpm dev
 
