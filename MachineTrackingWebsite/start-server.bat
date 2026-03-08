@@ -33,6 +33,6 @@ if errorlevel 1 (
 )
 
 echo Starting Nuxt dev server...
-call pnpm dev
+call pnpm run dev --host
 
 endlocal
