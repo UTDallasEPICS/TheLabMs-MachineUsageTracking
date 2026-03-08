@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import prisma from '../lib/prisma'
 
 export type SessionAdminUser = {
   id: string
@@ -14,9 +15,18 @@ export async function requireAdminUser(event: H3Event): Promise<SessionAdminUser
     throw createError({ statusCode: 403, message: 'Admin access required' })
   }
 
+  const dbAdmin = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { id: true, email: true, role: true }
+  })
+
+  if (!dbAdmin || dbAdmin.role !== 'admin') {
+    throw createError({ statusCode: 403, message: 'Admin access required' })
+  }
+
   return {
-    id: user.id,
-    email: user.email,
+    id: dbAdmin.id,
+    email: dbAdmin.email,
     role: 'admin'
   }
 }

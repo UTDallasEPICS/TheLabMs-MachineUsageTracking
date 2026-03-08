@@ -1,5 +1,6 @@
 import { compare } from 'bcrypt-ts'
 import prisma from '../../lib/prisma'
+import { assertLoginNotBlocked, clearLoginFailures, recordFailedLogin } from '../../utils/login-rate-limit'
 
 
 type AdminLoginBody = {
@@ -16,15 +17,21 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Email and password are required' })
   }
 
+  assertLoginNotBlocked(event, email)
+
   const user = await prisma.user.findUnique({ where: { email } })
   if (!user || user.role !== 'admin') {
+    recordFailedLogin(event, email)
     throw createError({ statusCode: 401, message: 'Invalid admin credentials' })
   }
 
   const passwordMatches = await compare(password, user.password_hash)
   if (!passwordMatches) {
+    recordFailedLogin(event, email)
     throw createError({ statusCode: 401, message: 'Invalid admin credentials' })
   }
+
+  clearLoginFailures(event, email)
 
   const sessionUser = {
     id: user.id,

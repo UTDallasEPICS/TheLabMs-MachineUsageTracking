@@ -7,6 +7,24 @@ type PendingUser = {
   requested_at: string
 }
 
+type UserRecord = {
+  id: string
+  email: string
+  role: 'admin' | 'user'
+  created_at: string
+}
+
+type MicrocontrollerRecord = {
+  id: number
+  name: string
+  api_key: string
+  created_at: string
+  _count: {
+    sensor_data: number
+    usage_sessions: number
+  }
+}
+
 type AdminInfoResponse = {
   admin: {
     id: string
@@ -28,20 +46,25 @@ type NewMachineResponse = {
 
 const { data: me, refresh: refreshMe } = await useFetch<AdminInfoResponse>('/api/admin/me')
 const { data: pending, refresh: refreshPending } = await useFetch<PendingUser[]>('/api/admin/pending')
+const { data: users, refresh: refreshUsers } = await useFetch<UserRecord[]>('/api/admin/users')
+const { data: microcontrollers, refresh: refreshMicrocontrollers } = await useFetch<MicrocontrollerRecord[]>('/api/admin/microcontrollers')
 
 const newMcName = ref('')
 const newMachine = ref<NewMachineResponse | null>(null)
 const pageError = ref('')
+const pageSuccess = ref('')
 
 async function refreshAll() {
-  await Promise.all([refreshMe(), refreshPending()])
+  await Promise.all([refreshMe(), refreshPending(), refreshUsers(), refreshMicrocontrollers()])
 }
 
 async function approve(id: string) {
   pageError.value = ''
+  pageSuccess.value = ''
   try {
     await $fetch('/api/admin/approve', { method: 'POST', body: { id } })
     await refreshAll()
+    pageSuccess.value = 'User approved successfully.'
   } catch {
     pageError.value = 'Could not approve user.'
   }
@@ -49,9 +72,11 @@ async function approve(id: string) {
 
 async function deny(id: string) {
   pageError.value = ''
+  pageSuccess.value = ''
   try {
     await $fetch('/api/admin/deny', { method: 'POST', body: { id } })
     await refreshAll()
+    pageSuccess.value = 'Pending request denied.'
   } catch {
     pageError.value = 'Could not deny user.'
   }
@@ -61,6 +86,7 @@ async function registerMicrocontroller() {
   if (!newMcName.value.trim()) return
 
   pageError.value = ''
+  pageSuccess.value = ''
   try {
     const result = await $fetch<NewMachineResponse>('/api/admin/microcontroller', {
       method: 'POST',
@@ -70,8 +96,45 @@ async function registerMicrocontroller() {
     newMachine.value = result
     newMcName.value = ''
     await refreshMe()
+    await refreshMicrocontrollers()
+    pageSuccess.value = 'Microcontroller registered.'
   } catch {
     pageError.value = 'Failed to register microcontroller.'
+  }
+}
+
+async function removeMicrocontroller(id: number, name: string) {
+  if (!confirm(`Remove microcontroller "${name}" and all related data?`)) return
+
+  pageError.value = ''
+  pageSuccess.value = ''
+  try {
+    await $fetch('/api/admin/microcontroller', {
+      method: 'DELETE',
+      body: { id }
+    })
+    await refreshAll()
+    pageSuccess.value = `Microcontroller "${name}" removed.`
+  } catch {
+    pageError.value = 'Failed to remove microcontroller.'
+  }
+}
+
+async function removeUser(id: string, email: string) {
+  if (!confirm(`Remove user account "${email}"?`)) return
+
+  pageError.value = ''
+  pageSuccess.value = ''
+  try {
+    await $fetch('/api/admin/user', {
+      method: 'DELETE',
+      body: { id }
+    })
+    await refreshAll()
+    pageSuccess.value = `User account "${email}" removed.`
+  } catch (error: unknown) {
+    const message = (error as { data?: { message?: string } })?.data?.message
+    pageError.value = message || 'Failed to remove user.'
   }
 }
 
@@ -132,7 +195,48 @@ async function logoutAdmin() {
       </div>
     </section>
 
+    <section class="admin-panel">
+      <h2>Registered Microcontrollers</h2>
+      <p v-if="!microcontrollers?.length">No microcontrollers registered.</p>
+
+      <div v-for="mc in microcontrollers" :key="mc.id" class="pending-item">
+        <div>
+          <p><strong>{{ mc.name }}</strong> (ID {{ mc.id }})</p>
+          <p>API key: <code>{{ mc.api_key }}</code></p>
+          <p>Signals: {{ mc._count.sensor_data }} | Sessions: {{ mc._count.usage_sessions }}</p>
+        </div>
+        <div class="pending-item__actions">
+          <button class="danger" @click="removeMicrocontroller(mc.id, mc.name)">Remove</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <h2>All Users</h2>
+      <p v-if="!users?.length">No users found.</p>
+
+      <div v-for="account in users" :key="account.id" class="pending-item">
+        <div>
+          <p>
+            <strong>{{ account.email }}</strong>
+            <span class="role-badge" :class="account.role">{{ account.role }}</span>
+          </p>
+          <p>Created: {{ new Date(account.created_at).toLocaleString() }}</p>
+        </div>
+        <div class="pending-item__actions">
+          <button
+            class="danger"
+            :disabled="account.id === me?.admin.id"
+            @click="removeUser(account.id, account.email)"
+          >
+            Remove Account
+          </button>
+        </div>
+      </div>
+    </section>
+
     <p v-if="pageError" class="page-error">{{ pageError }}</p>
+    <p v-if="pageSuccess" class="page-success">{{ pageSuccess }}</p>
   </div>
 </template>
 
@@ -199,6 +303,11 @@ async function logoutAdmin() {
   color: #fee2e2;
 }
 
+.pending-item__actions .danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .admin-panel__inline {
   display: flex;
   gap: 0.6rem;
@@ -229,8 +338,31 @@ async function logoutAdmin() {
   overflow-wrap: anywhere;
 }
 
+.role-badge {
+  margin-left: 0.45rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.role-badge.admin {
+  background: rgba(59, 130, 246, 0.2);
+  color: #bfdbfe;
+}
+
+.role-badge.user {
+  background: rgba(16, 185, 129, 0.2);
+  color: #bbf7d0;
+}
+
 .page-error {
   color: #fca5a5;
+}
+
+.page-success {
+  color: #86efac;
 }
 
 @media (max-width: 640px) {
