@@ -11,15 +11,11 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo Ensuring pnpm build scripts are enabled for this project...
-call pnpm config set ignore-scripts false --location project >nul 2>&1
-
-echo Installing/repairing dependencies (scripts enabled)...
+echo Installing/repairing dependencies with approved build-script allowlist...
 call pnpm install --ignore-scripts=false
 if errorlevel 1 (
   echo [ERROR] Dependency installation failed.
-  echo If you still see "ignored build scripts", run:
-  echo   pnpm approve-builds
+  echo If needed, run: pnpm approve-builds
   pause
   exit /b 1
 )

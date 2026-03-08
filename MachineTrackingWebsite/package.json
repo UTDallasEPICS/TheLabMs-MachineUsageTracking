@@ -29,5 +29,16 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.3.3",
     "prisma": "^6.19.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@prisma/client",
+      "@prisma/engines",
+      "bcrypt",
+      "better-sqlite3",
+      "esbuild",
+      "prisma"
+    ]
   }
 }
