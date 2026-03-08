@@ -52,7 +52,7 @@ async function logout() {
   height: 2.1rem;
   padding: 0.5rem 1rem;
   border-radius: 99px;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   position: relative;
   text-decoration: none;
   white-space: nowrap;
@@ -62,6 +62,7 @@ async function logout() {
 .navbar-link:hover {
   color: var(--text-primary);
   background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
 }
 
 .navbar-link.router-link-active {

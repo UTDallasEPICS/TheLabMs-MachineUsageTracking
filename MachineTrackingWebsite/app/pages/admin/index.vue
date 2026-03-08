@@ -254,6 +254,18 @@ async function logoutAdmin() {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  position: relative;
+  padding-bottom: 0.4rem;
+}
+
+.admin-dashboard__header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.5), rgba(129, 140, 248, 0));
 }
 
 .admin-dashboard__header h1 {
@@ -267,6 +279,13 @@ async function logoutAdmin() {
   border-radius: 10px;
   padding: 0.55rem 0.8rem;
   cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.admin-dashboard__logout:hover {
+  transform: translateY(-1px);
+  border-color: rgba(148, 163, 184, 0.55);
+  background: rgba(148, 163, 184, 0.08);
 }
 
 .admin-panel {
@@ -274,6 +293,21 @@ async function logoutAdmin() {
   border-radius: 12px;
   padding: 1rem;
   background: rgba(15, 23, 42, 0.55);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-panel:hover {
+  transform: translateY(-1px);
+  border-color: rgba(148, 163, 184, 0.34);
+  box-shadow: 0 10px 22px rgba(2, 6, 23, 0.25);
+}
+
+.admin-panel h2 {
+  margin-bottom: 0.3rem;
+  background: linear-gradient(90deg, #e2e8f0, #93c5fd);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .pending-item {
@@ -296,6 +330,14 @@ async function logoutAdmin() {
   border-radius: 8px;
   padding: 0.45rem 0.75rem;
   cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pending-item__actions button:hover,
+.admin-panel__inline button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 4px 12px rgba(2, 6, 23, 0.25);
 }
 
 .pending-item__actions .danger {

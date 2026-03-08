@@ -103,6 +103,13 @@ async function register() {
   color: #082f49;
   font-weight: 700;
   cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-card button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 6px 14px rgba(14, 165, 233, 0.25);
 }
 
 .auth-card button:disabled {

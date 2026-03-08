@@ -10,6 +10,8 @@ const isAdmin = computed(() => {
 <template>
     <div class="home-page">
         <section class="hero">
+            <div class="hero__glow hero__glow--one" aria-hidden="true" />
+            <div class="hero__glow hero__glow--two" aria-hidden="true" />
             <p class="hero__eyebrow">The Lab MS</p>
             <h1 class="hero__title">Machine Usage Tracking</h1>
             <p class="hero__subtitle">
@@ -54,10 +56,39 @@ const isAdmin = computed(() => {
 }
 
 .hero {
+    position: relative;
+    overflow: hidden;
     border: 1px solid rgba(148, 163, 184, 0.2);
     border-radius: 16px;
     background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.88));
     padding: 1.6rem;
+    isolation: isolate;
+}
+
+.hero__glow {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(26px);
+    opacity: 0.28;
+    z-index: -1;
+    animation: drift 8s ease-in-out infinite;
+}
+
+.hero__glow--one {
+    width: 190px;
+    height: 190px;
+    right: -40px;
+    top: -40px;
+    background: rgba(56, 189, 248, 0.45);
+}
+
+.hero__glow--two {
+    width: 150px;
+    height: 150px;
+    left: -30px;
+    bottom: -40px;
+    background: rgba(129, 140, 248, 0.4);
+    animation-delay: -2.5s;
 }
 
 .hero__eyebrow {
@@ -91,20 +122,36 @@ const isAdmin = computed(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.45rem;
     border-radius: 999px;
     padding: 0.55rem 1rem;
     font-weight: 600;
     font-size: 0.9rem;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease, border-color 0.22s ease, background 0.22s ease;
 }
 
 .btn--primary {
     background: var(--accent-gradient);
     color: white;
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.22);
+}
+
+.btn--primary:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+    box-shadow: 0 10px 24px rgba(56, 189, 248, 0.35);
 }
 
 .btn--ghost {
     border: 1px solid rgba(148, 163, 184, 0.35);
     color: var(--text-primary);
+    background: rgba(15, 23, 42, 0.4);
+}
+
+.btn--ghost:hover {
+    transform: translateY(-1px);
+    border-color: rgba(148, 163, 184, 0.62);
+    background: rgba(30, 41, 59, 0.55);
 }
 
 .quick-grid {
@@ -114,10 +161,35 @@ const isAdmin = computed(() => {
 }
 
 .quick-card {
+    position: relative;
+    overflow: hidden;
     border: 1px solid rgba(148, 163, 184, 0.2);
     border-radius: 12px;
     background: rgba(15, 23, 42, 0.65);
     padding: 1rem;
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.quick-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(56, 189, 248, 0), rgba(56, 189, 248, 0.8), rgba(129, 140, 248, 0));
+    opacity: 0;
+    transition: opacity 0.22s ease;
+}
+
+.quick-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(148, 163, 184, 0.35);
+    box-shadow: 0 12px 24px rgba(2, 6, 23, 0.28);
+}
+
+.quick-card:hover::before {
+    opacity: 1;
 }
 
 .quick-card h2 {
@@ -128,6 +200,17 @@ const isAdmin = computed(() => {
 .quick-card p {
     color: var(--text-secondary);
     font-size: 0.92rem;
+}
+
+@keyframes drift {
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(8px);
+    }
 }
 </style>
 

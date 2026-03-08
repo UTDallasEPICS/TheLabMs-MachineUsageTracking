@@ -36,6 +36,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+#__nuxt {
+  position: relative;
+  z-index: 1;
+}
+
+section {
+  backdrop-filter: blur(2px);
+}
+
 a {
   text-decoration: none;
   color: inherit;

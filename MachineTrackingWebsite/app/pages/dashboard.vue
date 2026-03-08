@@ -6,12 +6,13 @@
         <p class="dashboard__subtitle">Live machine status and runtime today</p>
       </div>
       <div class="actions-row">
+        <span class="live-chip" v-if="formattedGeneratedAt">
+          <span class="live-dot" aria-hidden="true"></span>
+          Updated {{ formattedGeneratedAt }}
+        </span>
         <button class="refresh-btn" @click="refresh()">Refresh</button>
-        <button v-if="isAdmin" class="add-machine-btn" @click="showModal = true">+ Add Machine</button>
       </div>
     </div>
-
-    <p v-if="!isAdmin" class="read-only-note">Read-only access: only admins can add machines.</p>
 
     <div class="dashboard__grid">
       <Card>
@@ -44,12 +45,6 @@
         </template>
       </Card>
     </div>
-
-    <AddMachineModal
-      v-if="showModal && isAdmin"
-      @confirm="onConfirm"
-      @cancel="showModal = false"
-    />
   </div>
 </template>
 
@@ -65,11 +60,6 @@ definePageMeta({
     }
   ]
 })
-
-type RegisterMachinePayload = {
-  name: string;
-  apiKey: number;
-};
 
 type DashboardMachine = {
   id: number;
@@ -96,8 +86,6 @@ const { data, pending, error, refresh } = await useFetch<UsageResponse>(
 
 const REFRESH_INTERVAL_MS = 5000;
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
-const showModal = ref(false);
-const { user } = useUserSession();
 
 onMounted(() => {
   refreshTimer = setInterval(() => {
@@ -113,10 +101,10 @@ onBeforeUnmount(() => {
 
 const machines = computed(() => data.value?.machines ?? []);
 const isInitialLoad = computed(() => pending.value && !data.value);
-const isAdmin = computed(() => {
-  const currentUser = user.value as { role?: string } | null;
-  return currentUser?.role === 'admin';
-});
+const formattedGeneratedAt = computed(() => {
+  const value = data.value?.generatedAt
+  return value ? new Date(value).toLocaleTimeString() : ''
+})
 
 const formatDuration = (seconds: number): string => {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -131,25 +119,6 @@ const formatLastSignal = (value: string | null): string => {
   return new Date(value).toLocaleString();
 };
 
-const onConfirm = async (payload: RegisterMachinePayload) => {
-  if (!isAdmin.value) return;
-
-  try {
-    await $fetch('/api/admin/microcontroller', {
-      method: 'POST',
-      body: { name: payload.name },
-    });
-
-    showModal.value = false;
-    await refresh();
-  } catch (fetchError: unknown) {
-    const message = fetchError instanceof Error
-      ? fetchError.message
-      : 'Could not add machine';
-
-    alert(message);
-  }
-};
 </script>
 
 <style scoped>
@@ -169,9 +138,31 @@ const onConfirm = async (payload: RegisterMachinePayload) => {
 
 .actions-row {
   display: flex;
+  align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.live-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.38);
+  background: rgba(14, 116, 144, 0.2);
+  font-size: 0.74rem;
+  color: #bae6fd;
+}
+
+.live-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #22d3ee;
+  box-shadow: 0 0 0 rgba(34, 211, 238, 0.7);
+  animation: pulse-ring 1.8s ease-out infinite;
 }
 
 .refresh-btn {
@@ -187,12 +178,14 @@ const onConfirm = async (payload: RegisterMachinePayload) => {
   background: transparent;
   color: inherit;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .refresh-btn:hover {
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.28);
 }
 
 .dashboard__title {
@@ -207,46 +200,10 @@ const onConfirm = async (payload: RegisterMachinePayload) => {
   opacity: 0.6;
 }
 
-.add-machine-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1.2rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  font-family: inherit;
-  border: none;
-  border-radius: 99px;
-  background: linear-gradient(135deg, #38bdf8, #818cf8);
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 2px 12px rgba(56, 189, 248, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.add-machine-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5);
-  filter: brightness(1.1);
-}
-
-.add-machine-btn:active {
-  transform: translateY(0) scale(0.97);
-  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
-}
-
 .dashboard__grid {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.read-only-note {
-  margin: -0.3rem 0 1rem;
-  font-size: 0.88rem;
-  color: #93c5fd;
 }
 
 .card-title {
@@ -270,6 +227,13 @@ const onConfirm = async (payload: RegisterMachinePayload) => {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(125, 211, 252, 0.35);
+  box-shadow: 0 10px 20px rgba(2, 6, 23, 0.22);
 }
 
 .status-row {
@@ -287,6 +251,8 @@ const onConfirm = async (payload: RegisterMachinePayload) => {
 
 .status-on {
   background: #22c55e;
+  box-shadow: 0 0 0 rgba(34, 197, 94, 0.6);
+  animation: pulse-ring-green 2s ease-out infinite;
 }
 
 .status-off {
@@ -320,6 +286,34 @@ const onConfirm = async (payload: RegisterMachinePayload) => {
 @media (max-width: 600px) {
   .dashboard {
     padding: 1rem;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 8px rgba(34, 211, 238, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0);
+  }
+}
+
+@keyframes pulse-ring-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
+  }
+
+  70% {
+    box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
   }
 }
 </style>
