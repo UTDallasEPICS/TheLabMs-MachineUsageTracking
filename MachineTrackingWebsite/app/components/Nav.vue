@@ -3,9 +3,23 @@
     <ul class="navbar-list">
       <li><NuxtLink to="/" class="navbar-link">Home</NuxtLink></li>
       <li><NuxtLink to="/dashboard" class="navbar-link">Dashboard</NuxtLink></li>
+      <li><NuxtLink to="/admin/login" class="navbar-link">Admin</NuxtLink></li>
+      <li v-if="!loggedIn"><NuxtLink to="/login" class="navbar-link">Login</NuxtLink></li>
+      <li v-if="!loggedIn"><NuxtLink to="/register" class="navbar-link">Register</NuxtLink></li>
+      <li v-if="loggedIn"><button class="navbar-link navbar-button" @click="logout">Logout</button></li>
     </ul>
   </nav>
 </template>
+
+<script setup lang="ts">
+const { loggedIn, fetch: refreshSession } = useUserSession()
+
+async function logout() {
+  await $fetch('/api/auth/logout', { method: 'POST' })
+  await refreshSession()
+  await navigateTo('/login')
+}
+</script>
 
 <style scoped>
 .navbar {
@@ -53,5 +67,11 @@
   background: var(--primary-color);
   border-radius: 50%;
   opacity: 0; /* Hidden for now, maybe nicer without it if using pill bg */
+}
+
+.navbar-button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
 }
 </style>

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -16,32 +13,18 @@ enum Role {
   user
 }
 
-model Microcontroller {
-  id            Int          @id @default(autoincrement())
-  name          String
-  type          String
-  api_key       Int          @unique
-  battery_level Int
-  created_at    DateTime     @default(now())
-  sensor_data   SensorData[] @relation("MicrocontrollerData")
-}
-
-model SensorData {
-  id                 Int             @id @default(autoincrement())
-  microcontroller    Microcontroller @relation("MicrocontrollerData", fields: [microcontroller_id], references: [id], onDelete: Cascade)
-  microcontroller_id Int
-  machine_state      Boolean
-  timestamp          DateTime        @default(now())
-
-  @@index([microcontroller_id, timestamp], name: "idx_microcontroller_time")
+model PendingUser {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password_hash String
+  requested_at  DateTime @default(now())
 }
 
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
   password_hash String
-  role          Role
-  approved      Boolean   @default(false)
+  role          Role      @default(user)
   created_at    DateTime  @default(now())
   sessions      Session[]
 }
@@ -52,4 +35,35 @@ model Session {
   user       User     @relation(fields: [user_id], references: [id])
   expires_at DateTime
   created_at DateTime @default(now())
+}
+
+model Microcontroller {
+  id             Int                   @id @default(autoincrement())
+  name           String
+  api_key        String                @unique  // ✅ changed from Int to String
+  created_at     DateTime              @default(now())
+  sensor_data    SensorData[]          @relation("MicrocontrollerData")
+  usage_sessions MachineUsageSession[]
+}
+
+model SensorData {
+  id                 Int             @id @default(autoincrement())
+  microcontroller_id Int
+  microcontroller    Microcontroller @relation("MicrocontrollerData", fields: [microcontroller_id], references: [id])
+  machine_state      Boolean
+  timestamp          DateTime        @default(now())
+
+  @@index([microcontroller_id, timestamp])  // ✅ added for query performance
+}
+
+model MachineUsageSession {
+  id                 Int             @id @default(autoincrement())
+  microcontroller_id Int
+  microcontroller    Microcontroller @relation(fields: [microcontroller_id], references: [id])
+  started_at         DateTime
+  ended_at           DateTime?
+  // ✅ removed duration_seconds — compute from ended_at - started_at instead
+
+  @@index([microcontroller_id, ended_at])
+  @@index([started_at])
 }

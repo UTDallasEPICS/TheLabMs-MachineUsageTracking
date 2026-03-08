@@ -18,23 +18,15 @@
         </div>
 
         <div class="form-group">
-          <label for="machine-voltage">Voltage Usage (V)</label>
+          <label for="machine-api-key">API Key <span class="required">*</span></label>
           <input
-            id="machine-voltage"
-            v-model.number="form.voltage_usage"
+            id="machine-api-key"
+            v-model.number="form.apiKey"
             type="number"
-            placeholder="e.g. 220"
-            min="0"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="machine-desc">Description</label>
-          <input
-            id="machine-desc"
-            v-model="form.description"
-            type="text"
-            placeholder="Optional description"
+            placeholder="e.g. 123456"
+            min="1"
+            step="1"
+            required
           />
         </div>
 
@@ -51,22 +43,22 @@
 import { reactive } from 'vue';
 
 const emit = defineEmits<{
-  confirm: [data: { name: string; voltage_usage: number; description: string }];
+  confirm: [data: { name: string; apiKey: number }];
   cancel: [];
 }>();
 
 const form = reactive({
   name: '',
-  voltage_usage: 0,
-  description: '',
+  apiKey: 0,
 });
 
 const handleConfirm = () => {
   if (!form.name.trim()) return;
+  if (!Number.isInteger(form.apiKey) || form.apiKey < 1) return;
+
   emit('confirm', {
     name: form.name.trim(),
-    voltage_usage: form.voltage_usage,
-    description: form.description.trim(),
+    apiKey: form.apiKey,
   });
 };
 </script>
