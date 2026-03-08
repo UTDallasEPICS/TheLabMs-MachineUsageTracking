@@ -23,11 +23,16 @@ if errorlevel 1 (
 echo Rebuilding dependencies to ensure native/build steps are applied...
 call pnpm rebuild --recursive >nul 2>&1
 
+if "%DATABASE_URL%"=="" (
+  echo DATABASE_URL is not set. Using fallback: file:./dev.db
+  set "DATABASE_URL=file:./dev.db"
+)
+
 echo Generating Prisma client...
 call pnpm prisma generate
 if errorlevel 1 (
   echo [ERROR] Prisma generate failed.
-  echo If scripts are blocked, run: pnpm approve-builds
+  echo Check that DATABASE_URL is set in .env or system environment.
   pause
   exit /b 1
 )
