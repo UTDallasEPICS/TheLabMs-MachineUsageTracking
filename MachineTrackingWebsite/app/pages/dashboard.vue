@@ -28,7 +28,7 @@
           </div>
 
           <div v-else-if="!machines.length" class="empty-state">
-            No machines found. Add rows to the Microcontroller table first.
+            No machines found. Setup a microcontroller as admin first.
           </div>
 
           <div v-else class="stat-row">
@@ -84,7 +84,7 @@ const { data, pending, error, refresh } = await useFetch<UsageResponse>(
   },
 );
 
-const REFRESH_INTERVAL_MS = 5000;
+const REFRESH_INTERVAL_MS = 1000;
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {

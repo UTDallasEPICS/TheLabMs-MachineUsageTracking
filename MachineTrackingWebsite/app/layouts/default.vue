@@ -99,12 +99,11 @@ onBeforeUnmount(() => {
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.15;
+    opacity: 0.5;
     background-image:
         linear-gradient(rgba(128, 176, 224, 0.09) 1px, transparent 1px),
         linear-gradient(90deg, rgba(128, 176, 224, 0.09) 1px, transparent 1px);
     background-size: 36px 36px;
-    mask-image: radial-gradient(circle at center, black 10%, transparent 76%);
 }
 
 .ambient-pointer {

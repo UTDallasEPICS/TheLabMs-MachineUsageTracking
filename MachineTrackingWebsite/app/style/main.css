@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Picture1-inspired palette: deep blue + cool steel + red accent */
+  /* palette: deep blue + cool steel + red accent */
   --bg-color: #081728;
   --surface-color: #10263a;
   --surface-hover: #1a3852;

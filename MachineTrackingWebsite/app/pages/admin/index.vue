@@ -340,6 +340,14 @@ async function removeUser(id: string, email: string) {
   line-height: 1.2;
 }
 
+.overview-card:hover {
+  border-color: rgba(128, 176, 224, 0.35);
+  background: rgba(10, 27, 46, 0.72);
+  box-shadow:
+    0 0 0 1px rgba(128, 176, 224, 0.12),
+    0 4px 12px rgba(2, 6, 23, 0.16);
+}
+
 .admin-layout {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
