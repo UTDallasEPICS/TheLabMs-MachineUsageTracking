@@ -3,6 +3,18 @@ setlocal
 
 cd /d "%~dp0"
 
+if not exist ".env" (
+  if exist ".env.example" (
+    echo .env not found. Creating it from .env.example...
+    copy /Y ".env.example" ".env" >nul
+    if errorlevel 1 (
+      echo [ERROR] Failed to create .env from .env.example.
+      pause
+      exit /b 1
+    )
+  )
+)
+
 where pnpm >nul 2>&1
 if errorlevel 1 (
   echo [ERROR] pnpm is not installed or not on PATH.
