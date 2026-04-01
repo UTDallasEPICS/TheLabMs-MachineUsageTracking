@@ -2,6 +2,13 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  nitro: {
+    experimental: { tasks: true },
+    // Close sessions open for more than 24 hours, once per hour
+    scheduledTasks: {
+      '0 * * * *': ['sessions:cleanup'],
+    },
+  },
   css: ['~/style/main.css'],
   modules: ['nuxt-auth-utils'],
   runtimeConfig: {

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(node -e ':*)",
+      "Bash(node -e 'const {PrismaClient}=require\\('\\\\''@prisma/client'\\\\''\\);const p=new PrismaClient\\(\\);p.user.findMany\\({select:{id:true,username:true,role:true}}\\).then\\(r=>console.log\\(JSON.stringify\\(r\\)\\)\\).finally\\(\\(\\)=>p.$disconnect\\(\\)\\)')",
+      "Bash(sqlite3 prisma/dev.db \"SELECT id, username, role FROM User LIMIT 10;\")",
+      "Bash(sqlite3 prisma/dev.db \".tables\")",
+      "Bash(sqlite3 prisma/dev.db \"SELECT * FROM User LIMIT 5;\")",
+      "Bash(sqlite3 prisma/dev.db \"SELECT id, microcontroller_id, started_at, ended_at FROM MachineUsageSession ORDER BY id DESC LIMIT 5;\")",
+      "Bash(sqlite3 prisma/dev.db \"SELECT id, microcontroller_id, typeof\\(started_at\\), quote\\(started_at\\), quote\\(ended_at\\) FROM MachineUsageSession ORDER BY id DESC LIMIT 5;\")",
+      "Bash(curl:*)",
+      "Bash(sqlite3 prisma/dev.db \"SELECT id, microcontroller_id, typeof\\(started_at\\), quote\\(started_at\\), ended_at FROM MachineUsageSession WHERE id=5;\")",
+      "Bash(sqlite3 prisma/dev.db \"SELECT id, started_at, ended_at FROM MachineUsageSession ORDER BY id;\")",
+      "Bash(sqlite3 prisma/dev.db \"SELECT mc.id, mc.name, s.started_at FROM MachineUsageSession s JOIN Microcontroller mc ON s.microcontroller_id = mc.id WHERE s.ended_at IS NULL;\")",
+      "Bash(sqlite3 prisma/dev.db \"UPDATE MachineUsageSession SET ended_at = 1775059794000 WHERE id = 4;\")",
+      "Bash(node:*)"
+    ]
+  }
+}

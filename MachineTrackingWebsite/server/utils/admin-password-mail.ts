@@ -26,10 +26,10 @@ export async function sendAdminResetEmail(to: string, resetUrl: string): Promise
       })
       return
     } catch (error) {
-      console.error('[admin-password-reset] SMTP send failed, falling back to log output:', error)
+      console.error('[admin-password-mail] SMTP send failed, falling back to log output:', error)
     }
   }
 
   // Development fallback when SMTP is not configured.
-  console.info(`[admin-password-reset] Reset link for ${to}: ${resetUrl}`)
+  console.info(`[admin-password-mail] Reset link for ${to}: ${resetUrl}`)
 }

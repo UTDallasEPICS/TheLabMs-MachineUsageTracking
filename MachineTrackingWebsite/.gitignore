@@ -21,3 +21,7 @@ logs
 /app/generated/prisma
 
 /generated/prisma
+
+.env
+
+CLAUDE.md

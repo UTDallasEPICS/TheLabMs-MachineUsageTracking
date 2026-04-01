@@ -1,9 +1,10 @@
 <template>
   <div class="dashboard">
+    <!-- ── Header ── -->
     <div class="dashboard__header">
       <div>
         <h1 class="dashboard__title">Dashboard</h1>
-        <p class="dashboard__subtitle">Live machine status and runtime today</p>
+        <p class="dashboard__subtitle">Monthly machine usage calendar</p>
       </div>
       <div class="actions-row">
         <span class="live-chip" v-if="formattedGeneratedAt">
@@ -15,31 +16,106 @@
     </div>
 
     <div class="dashboard__grid">
+      <!-- ── Calendar Card ── -->
       <Card>
         <template #title>
-          <h2 class="card-title">Machine Runtime</h2>
+          <div class="cal-nav">
+            <button class="cal-nav-btn" @click="prevMonth" aria-label="Previous month">&#8249;</button>
+            <span class="cal-month-label">{{ monthLabel }}</span>
+            <button class="cal-nav-btn" @click="nextMonth" aria-label="Next month">&#8250;</button>
+          </div>
         </template>
 
         <template #stats>
-          <div v-if="isInitialLoad" class="empty-state">Loading machine data...</div>
+          <div v-if="isInitialLoad" class="empty-state">Loading calendar data…</div>
 
-          <div v-else-if="error" class="empty-state">
-            Could not load usage data. Make sure the server is running.
+          <div v-else-if="calError" class="empty-state">
+            Could not load calendar data. Make sure the server is running.
           </div>
 
-          <div v-else-if="!machines.length" class="empty-state">
-            No machines found. Setup a microcontroller as admin first.
-          </div>
+          <div v-else>
+            <!-- Day-of-week headers -->
+            <div class="cal-grid">
+              <div
+                v-for="d in DAY_LABELS"
+                :key="d"
+                class="cal-day-header"
+              >{{ d }}</div>
 
-          <div v-else class="stat-row">
-            <div v-for="m in machines" :key="m.id" class="stat-item">
-              <div class="stat-label">{{ m.name }}</div>
-              <div class="stat-value">{{ formatDuration(m.totalSecondsToday) }}</div>
-              <div class="status-row">
-                <span class="status-dot" :class="m.isOn ? 'status-on' : 'status-off'" />
-                <span>{{ m.isOn ? 'On' : 'Off' }}</span>
+              <!-- Filler cells before day 1 -->
+              <div
+                v-for="n in firstDayOfWeek"
+                :key="'filler-' + n"
+                class="cal-cell cal-cell--filler"
+              ></div>
+
+              <!-- Day cells -->
+              <div
+                v-for="day in calendarDays"
+                :key="day.date"
+                class="cal-cell cal-cell--clickable"
+                :class="{ 'cal-cell--today': day.isToday }"
+                @click="goToTimeline(day.date)"
+              >
+                <span class="cal-date-num">{{ day.dayNumber }}</span>
+                <div class="cal-bar-group">
+                  <div
+                    v-for="m in day.machines"
+                    :key="m.id"
+                    class="cal-bar"
+                    :style="{
+                      height: barHeight(m.totalSeconds) + 'px',
+                      background: machineColor(m.id),
+                    }"
+                    :title="`${m.name}: ${formatDuration(m.totalSeconds)}`"
+                  ></div>
+                </div>
+                <div class="cal-machine-totals">
+                  <span
+                    v-for="m in day.machines.filter(m => m.totalSeconds > 0)"
+                    :key="m.id"
+                    class="cal-machine-total"
+                    :style="{ color: machineColor(m.id) }"
+                  >{{ formatDurationShort(m.totalSeconds) }}</span>
+                </div>
               </div>
-              <div class="last-seen">Last signal: {{ formatLastSignal(m.lastSignalAt) }}</div>
+            </div>
+          </div>
+        </template>
+      </Card>
+
+      <!-- ── Machine Filter Card ── -->
+      <Card>
+        <template #title>
+          <h2 class="card-title">Machines</h2>
+        </template>
+
+        <template #stats>
+          <div v-if="!allMachines.length" class="empty-state">No machines found.</div>
+          <div v-else>
+            <div class="filter-row">
+              <button
+                v-for="m in allMachines"
+                :key="m.id"
+                class="machine-chip"
+                :class="{ 'machine-chip--active': visibleMachineIds.has(m.id) }"
+                :style="visibleMachineIds.has(m.id) ? { borderColor: machineColor(m.id), color: machineColor(m.id) } : {}"
+                @click="toggleMachine(m.id)"
+              >
+                <span class="chip-dot" :style="{ background: machineColor(m.id) }"></span>
+                {{ m.name }}
+              </button>
+            </div>
+            <div v-if="activeSessions.length" class="active-sessions">
+              <div
+                v-for="s in activeSessions"
+                :key="s.id"
+                class="active-session-row"
+              >
+                <span class="live-dot" aria-hidden="true"></span>
+                <span class="active-session-name" :style="{ color: machineColor(s.id) }">{{ s.name }}</span>
+                <span class="active-session-timer">{{ liveTimers[s.id] ?? '0h 0m 0s' }}</span>
+              </div>
             </div>
           </div>
         </template>
@@ -61,70 +137,209 @@ definePageMeta({
   ]
 })
 
-type DashboardMachine = {
-  id: number;
-  name: string;
-  isOn: boolean;
-  lastSignalAt: string | null;
-  totalSecondsToday: number;
-  totalMinutesToday: number;
-};
+// ── Types ────────────────────────────────────────────────────
+type CalendarDay = { date: string; totalSeconds: number }
+type CalendarMachine = { id: number; name: string; days: CalendarDay[] }
+type CalendarResponse = { year: number; month: number; machines: CalendarMachine[] }
 
-type UsageResponse = {
-  generatedAt: string;
-  machines: DashboardMachine[];
-};
+// ── Date state ───────────────────────────────────────────────
+const now = new Date()
+const selectedYear = ref(now.getFullYear())
+const selectedMonth = ref(now.getMonth() + 1) // 1-indexed
 
-const { data, pending, error, refresh } = await useFetch<UsageResponse>(
-  '/api/microcontroller/usage',
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const MACHINE_COLORS = [
+  '#80b0e0',
+  '#e0405a',
+  '#50c878',
+  '#f0a030',
+  '#a880e0',
+  '#40c8c8',
+  '#e08050',
+]
+
+// ── Fetch ────────────────────────────────────────────────────
+const { data, pending: calPending, error: calError, refresh } = await useFetch<CalendarResponse>(
+  '/api/microcontroller/calendar',
   {
     server: false,
     lazy: true,
     immediate: true,
+    query: computed(() => ({ year: selectedYear.value, month: selectedMonth.value })),
   },
-);
+)
 
-const REFRESH_INTERVAL_MS = 1000;
-let refreshTimer: ReturnType<typeof setInterval> | null = null;
+const isInitialLoad = computed(() => calPending.value && !data.value)
+const formattedGeneratedAt = computed(() => new Date().toLocaleTimeString())
+
+// ── Active sessions (live timers) ────────────────────────────
+type ActiveSession = { id: number; name: string; startedAt: string }
+
+const { data: activeData, refresh: refreshActive } = await useFetch<ActiveSession[]>(
+  '/api/microcontroller/active',
+  { server: false, lazy: true, immediate: true },
+)
+
+const activeSessions = computed(() => activeData.value ?? [])
+
+const liveTimers = ref<Record<number, string>>({})
+
+function updateTimers() {
+  const now = Date.now()
+  const updated: Record<number, string> = {}
+  for (const s of activeSessions.value) {
+    const elapsedSeconds = Math.max(0, Math.floor((now - new Date(s.startedAt).getTime()) / 1000))
+    updated[s.id] = formatDuration(elapsedSeconds)
+  }
+  liveTimers.value = updated
+}
+
+let timerInterval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
-  refreshTimer = setInterval(() => {
-    refresh();
-  }, REFRESH_INTERVAL_MS);
-});
-
-onBeforeUnmount(() => {
-  if (!refreshTimer) return;
-  clearInterval(refreshTimer);
-  refreshTimer = null;
-});
-
-const machines = computed(() => data.value?.machines ?? []);
-const isInitialLoad = computed(() => pending.value && !data.value);
-const formattedGeneratedAt = computed(() => {
-  const value = data.value?.generatedAt
-  return value ? new Date(value).toLocaleTimeString() : ''
+  updateTimers()
+  timerInterval = setInterval(updateTimers, 1000)
 })
 
-const formatDuration = (seconds: number): string => {
-  const safeSeconds = Math.max(0, Math.floor(seconds));
-  const hours = Math.floor(safeSeconds / 3600);
-  const minutes = Math.floor((safeSeconds % 3600) / 60);
-  const remainingSeconds = safeSeconds % 60;
-  return `${hours}h ${minutes}m ${remainingSeconds}s`;
-};
+onUnmounted(() => {
+  if (timerInterval !== null) clearInterval(timerInterval)
+})
 
-const formatLastSignal = (value: string | null): string => {
-  if (!value) return 'never';
-  return new Date(value).toLocaleString();
-};
+// Also refresh active sessions when the calendar refreshes
+watch(data, () => refreshActive())
 
+// ── Navigation ───────────────────────────────────────────────
+function goToTimeline(dateStr: string) {
+  navigateTo(`/timeline/${dateStr}`)
+}
+
+// ── Month navigation ─────────────────────────────────────────
+const monthLabel = computed(() => {
+  return new Date(selectedYear.value, selectedMonth.value - 1, 1)
+    .toLocaleString('default', { month: 'long', year: 'numeric' })
+})
+
+function prevMonth() {
+  if (selectedMonth.value === 1) {
+    selectedMonth.value = 12
+    selectedYear.value--
+  } else {
+    selectedMonth.value--
+  }
+}
+
+function nextMonth() {
+  if (selectedMonth.value === 12) {
+    selectedMonth.value = 1
+    selectedYear.value++
+  } else {
+    selectedMonth.value++
+  }
+}
+
+// ── Machine data & filter ────────────────────────────────────
+const allMachines = computed<{ id: number; name: string }[]>(() =>
+  (data.value?.machines ?? []).map((m) => ({ id: m.id, name: m.name }))
+)
+
+const visibleMachineIds = ref<Set<number>>(new Set())
+
+// Sync visible set when machine list changes (e.g. first load)
+watch(allMachines, (machines) => {
+  machines.forEach((m) => {
+    if (!visibleMachineIds.value.has(m.id)) {
+      visibleMachineIds.value = new Set([...visibleMachineIds.value, m.id])
+    }
+  })
+}, { immediate: true })
+
+function toggleMachine(id: number) {
+  const next = new Set(visibleMachineIds.value)
+  next.has(id) ? next.delete(id) : next.add(id)
+  visibleMachineIds.value = next
+}
+
+function machineColor(id: number): string {
+  const idx = (data.value?.machines ?? []).findIndex((m) => m.id === id)
+  return MACHINE_COLORS[idx % MACHINE_COLORS.length] ?? '#80b0e0'
+}
+
+// ── Calendar grid helpers ────────────────────────────────────
+const daysInMonth = computed(() =>
+  new Date(selectedYear.value, selectedMonth.value, 0).getDate()
+)
+
+// 0 = Sunday
+const firstDayOfWeek = computed(() =>
+  new Date(selectedYear.value, selectedMonth.value - 1, 1).getDay()
+)
+
+const maxSecondsInMonth = computed(() => {
+  let max = 0
+  for (let d = 0; d < daysInMonth.value; d++) {
+    let dayTotal = 0
+    for (const m of data.value?.machines ?? []) {
+      if (visibleMachineIds.value.has(m.id)) {
+        dayTotal += m.days[d]?.totalSeconds ?? 0
+      }
+    }
+    if (dayTotal > max) max = dayTotal
+  }
+  return max
+})
+
+const BAR_MAX_PX = 36
+
+function barHeight(seconds: number): number {
+  if (!maxSecondsInMonth.value) return 0
+  return Math.max(2, Math.round((seconds / maxSecondsInMonth.value) * BAR_MAX_PX))
+}
+
+const todayStr = computed(() => {
+  const t = new Date()
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+})
+
+const calendarDays = computed(() => {
+  return Array.from({ length: daysInMonth.value }, (_, i) => {
+    const dayNum = i + 1
+    const dateStr = `${selectedYear.value}-${String(selectedMonth.value).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
+
+    const machines = (data.value?.machines ?? [])
+      .filter((m) => visibleMachineIds.value.has(m.id))
+      .map((m) => ({ id: m.id, name: m.name, totalSeconds: m.days[i]?.totalSeconds ?? 0 }))
+
+    const totalSeconds = machines.reduce((acc, m) => acc + m.totalSeconds, 0)
+
+    return { dayNumber: dayNum, date: dateStr, isToday: dateStr === todayStr.value, machines, totalSeconds }
+  })
+})
+
+// ── Formatting ───────────────────────────────────────────────
+function formatDuration(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  return `${h}h ${m}m ${sec}s`
+}
+
+function formatDurationShort(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  if (h > 0) return `${h}h ${m}m`
+  if (m > 0) return `${m}m`
+  return `${s}s`
+}
 </script>
 
 <style scoped>
+/* ── Layout ── */
 .dashboard {
   padding: 2rem;
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
@@ -144,6 +359,25 @@ const formatLastSignal = (value: string | null): string => {
   justify-content: flex-end;
 }
 
+.dashboard__title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.dashboard__subtitle {
+  font-size: 0.9rem;
+  margin: 0;
+  opacity: 0.6;
+}
+
+.dashboard__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Live chip / refresh ── */
 .live-chip {
   display: inline-flex;
   align-items: center;
@@ -187,80 +421,179 @@ const formatLastSignal = (value: string | null): string => {
   box-shadow: 0 4px 14px rgba(8, 23, 40, 0.34);
 }
 
-.dashboard__title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem;
-}
-
-.dashboard__subtitle {
-  font-size: 0.9rem;
-  margin: 0;
-  opacity: 0.6;
-}
-
-.dashboard__grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
+/* ── Card title / nav ── */
 .card-title {
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0;
 }
 
-.stat-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+.cal-nav {
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
 }
 
-.stat-item {
+.cal-month-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 11rem;
+  text-align: center;
+}
+
+.cal-nav-btn {
+  background: transparent;
+  border: 1px solid rgba(128, 176, 224, 0.25);
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.25rem;
+  color: inherit;
+  line-height: 1;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.cal-nav-btn:hover {
+  background: rgba(128, 176, 224, 0.12);
+  border-color: rgba(128, 176, 224, 0.45);
+}
+
+/* ── Calendar Grid ── */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-day-header {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.cal-cell--filler {
+  background: transparent;
+  pointer-events: none;
+}
+
+.cal-cell {
+  min-height: 80px;
+  background: rgba(16, 38, 58, 0.45);
+  border: 1px solid rgba(128, 176, 224, 0.1);
+  border-radius: 8px;
+  padding: 0.4rem 0.3rem 0.35rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.75rem;
-  background: rgba(16, 38, 58, 0.54);
-  border: 1px solid rgba(128, 176, 224, 0.14);
-  border-radius: 10px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  gap: 0.25rem;
+  transition: border-color 0.18s ease, background 0.18s ease;
+  overflow: hidden;
 }
 
-.stat-item:hover {
+.cal-cell--clickable {
+  cursor: pointer;
+}
+
+.cal-cell:hover {
   border-color: rgba(128, 176, 224, 0.28);
   background: rgba(16, 38, 58, 0.7);
-  box-shadow: 0 10px 20px rgba(2, 6, 23, 0.22), 0 0 0 1px rgba(128, 176, 224, 0.08);
 }
 
-.status-row {
+.cal-cell--today {
+  border-color: rgba(128, 176, 224, 0.55);
+  background: rgba(128, 176, 224, 0.09);
+}
+
+.cal-date-num {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.6;
+  line-height: 1;
+  align-self: flex-start;
+}
+
+.cal-cell--today .cal-date-num {
+  opacity: 1;
+  color: var(--primary-color, #80b0e0);
+}
+
+.cal-bar-group {
   display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  flex: 1;
+  width: 100%;
+  justify-content: center;
+}
+
+.cal-bar {
+  width: 8px;
+  border-radius: 3px 3px 0 0;
+  min-height: 2px;
+  transition: height 0.3s ease;
+  flex-shrink: 0;
+}
+
+.cal-machine-totals {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.85rem;
+  gap: 1px;
+  width: 100%;
 }
 
-.status-dot {
-  width: 0.6rem;
-  height: 0.6rem;
+.cal-machine-total {
+  font-size: 0.58rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* ── Machine filter ── */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.machine-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.8rem 0.35rem 0.55rem;
   border-radius: 999px;
+  border: 1px solid rgba(128, 176, 224, 0.2);
+  background: rgba(16, 38, 58, 0.5);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
 }
 
-.status-on {
-  background: #22c55e;
-  box-shadow: 0 0 0 rgba(34, 197, 94, 0.6);
-  animation: pulse-ring-green 2s ease-out infinite;
+.machine-chip:hover {
+  background: rgba(128, 176, 224, 0.08);
 }
 
-.status-off {
-  background: var(--secondary-color);
+.machine-chip--active {
+  color: inherit;
+  background: rgba(128, 176, 224, 0.06);
 }
 
-.last-seen {
-  font-size: 0.72rem;
-  opacity: 0.7;
+.chip-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .empty-state {
@@ -268,21 +601,35 @@ const formatLastSignal = (value: string | null): string => {
   opacity: 0.8;
 }
 
-.stat-label {
-  font-size: 0.7rem;
+/* ── Active session timers ── */
+.active-sessions {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border-top: 1px solid rgba(128, 176, 224, 0.12);
+  padding-top: 0.65rem;
+}
+
+.active-session-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.active-session-name {
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.5;
+  min-width: 6rem;
 }
 
-.stat-value {
-  font-size: 1.6rem;
-  font-weight: 700;
-  line-height: 1;
+.active-session-timer {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
 }
 
-@media (max-width: 600px) {
+/* ── Responsive ── */
+@media (max-width: 640px) {
   .dashboard {
     padding: 1rem;
   }
@@ -298,40 +645,25 @@ const formatLastSignal = (value: string | null): string => {
     justify-content: flex-start;
   }
 
-  .stat-row {
-    grid-template-columns: 1fr;
+  .cal-cell {
+    min-height: 60px;
+    padding: 0.25rem 0.15rem;
   }
 
-  .stat-item {
-    align-items: flex-start;
+  .cal-bar {
+    width: 5px;
+  }
+
+  .cal-month-label {
+    min-width: 8rem;
+    font-size: 0.95rem;
   }
 }
 
+/* ── Animations ── */
 @keyframes pulse-ring {
-  0% {
-    box-shadow: 0 0 0 0 rgba(128, 176, 224, 0.62);
-  }
-
-  70% {
-    box-shadow: 0 0 0 8px rgba(128, 176, 224, 0);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0);
-  }
-}
-
-@keyframes pulse-ring-green {
-  0% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
-  }
-
-  70% {
-    box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-  }
+  0% { box-shadow: 0 0 0 0 rgba(128, 176, 224, 0.62); }
+  70% { box-shadow: 0 0 0 8px rgba(128, 176, 224, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
 }
 </style>

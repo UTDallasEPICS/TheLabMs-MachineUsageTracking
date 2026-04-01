@@ -4,8 +4,10 @@ import prisma from '../lib/prisma'
 export default defineEventHandler(async (event) => {
   if (!event.path.startsWith('/api/microcontroller/')) return
 
-  // Public read endpoint used by the dashboard.
+  // Public read endpoints used by the dashboard (user-session auth, not machine API key).
   if (event.path === '/api/microcontroller/usage') return
+  if (event.path.startsWith('/api/microcontroller/calendar')) return
+  if (event.path.startsWith('/api/microcontroller/timeline')) return
 
   const apiKey = getHeader(event, 'x-api-key')
   if (!apiKey) throw createError({ statusCode: 401, message: 'No API key' })

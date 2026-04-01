@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma'
+import { calculateSessionSeconds } from '../../utils/session-seconds'
 
 type MachineUsageItem = {
   id: number
@@ -13,17 +14,6 @@ function startOfToday(): Date {
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   return now
-}
-
-function calculateSessionSeconds(startedAt: Date, endedAt: Date | null, dayStart: Date, now: Date): number {
-  const effectiveStart = startedAt > dayStart ? startedAt : dayStart
-  const effectiveEnd = endedAt ?? now
-
-  if (effectiveEnd <= effectiveStart) {
-    return 0
-  }
-
-  return Math.floor((effectiveEnd.getTime() - effectiveStart.getTime()) / 1000)
 }
 
 export default defineEventHandler(async (event) => {

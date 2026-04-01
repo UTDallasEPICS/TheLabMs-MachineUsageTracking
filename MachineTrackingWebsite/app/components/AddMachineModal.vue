@@ -21,11 +21,9 @@
           <label for="machine-api-key">API Key <span class="required">*</span></label>
           <input
             id="machine-api-key"
-            v-model.number="form.apiKey"
-            type="number"
-            placeholder="e.g. 123456"
-            min="1"
-            step="1"
+            v-model="form.apiKey"
+            type="text"
+            placeholder="e.g. abc123xyz"
             required
           />
         </div>
@@ -43,22 +41,22 @@
 import { reactive } from 'vue';
 
 const emit = defineEmits<{
-  confirm: [data: { name: string; apiKey: number }];
+  confirm: [data: { name: string; apiKey: string }];
   cancel: [];
 }>();
 
 const form = reactive({
   name: '',
-  apiKey: 0,
+  apiKey: '',
 });
 
 const handleConfirm = () => {
   if (!form.name.trim()) return;
-  if (!Number.isInteger(form.apiKey) || form.apiKey < 1) return;
+  if (!form.apiKey.trim()) return;
 
   emit('confirm', {
     name: form.name.trim(),
-    apiKey: form.apiKey,
+    apiKey: form.apiKey.trim(),
   });
 };
 </script>
