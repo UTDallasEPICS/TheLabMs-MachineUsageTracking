@@ -99,6 +99,7 @@ function formatTooltip(start: string, end: string | null, isOngoing: boolean) {
 }
 
 // ── Colors (matching dashboard palette)
+// Add more color if more machine is going to use
 const MACHINE_COLORS = [
   '#80b0e0',
   '#e0405a',
