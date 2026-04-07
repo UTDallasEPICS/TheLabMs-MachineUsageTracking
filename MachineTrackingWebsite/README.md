@@ -76,7 +76,7 @@ Device  →  POST /api/microcontroller/session/start  →  microcontroller-auth 
         →  Prisma  →  MachineUsageSession (started_at)
 ...
 Device  →  POST /api/microcontroller/session/end    →  caps open session with ended_at
-Device  →  POST /api/microcontroller/sensor         →  SensorData (machine_state, timestamp)
+Device  →  POST /api/microcontroller/sensor         →  SensorData + session start/end from machine_state
 ```
 
 ### Dashboard → UI
@@ -103,7 +103,7 @@ User navigates  →  Vue watch triggers useFetch  →  GET /api/microcontroller/
 |---|---|---|
 | POST | `/api/microcontroller/session/start` | Opens a new usage session (closes any dangling open session first) |
 | POST | `/api/microcontroller/session/end` | Closes the current open session with `ended_at = now` |
-| POST | `/api/microcontroller/sensor` | Logs a raw ON/OFF signal to `SensorData` |
+| POST | `/api/microcontroller/sensor` | Logs a raw ON/OFF signal and opens/closes usage sessions from `machine_state` |
 
 ### Auth
 | Method | Endpoint | Description |
