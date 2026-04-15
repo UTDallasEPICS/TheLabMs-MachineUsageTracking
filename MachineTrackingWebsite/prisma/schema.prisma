@@ -42,6 +42,7 @@ model Microcontroller {
   name           String
   api_key        String                @unique  // ✅ changed from Int to String
   created_at     DateTime              @default(now())
+  isAC           Boolean               @default(false)
   sensor_data    SensorData[]          @relation("MicrocontrollerData")
   usage_sessions MachineUsageSession[]
 }
@@ -52,6 +53,7 @@ model SensorData {
   microcontroller    Microcontroller @relation("MicrocontrollerData", fields: [microcontroller_id], references: [id])
   machine_state      Boolean
   timestamp          DateTime        @default(now())
+  isAC               Boolean
 
   @@index([microcontroller_id, timestamp])  // ✅ added for query performance
 }

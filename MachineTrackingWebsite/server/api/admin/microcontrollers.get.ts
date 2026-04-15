@@ -11,6 +11,7 @@ export default defineEventHandler(async (event) => {
       name: true,
       api_key: true,
       created_at: true,
+      isAC: true,
       _count: {
         select: {
           sensor_data: true,

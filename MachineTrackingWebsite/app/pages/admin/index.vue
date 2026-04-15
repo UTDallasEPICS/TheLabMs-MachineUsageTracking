@@ -19,6 +19,7 @@ type MicrocontrollerRecord = {
   name: string
   api_key: string
   created_at: string
+  isAC: boolean
   _count: {
     sensor_data: number
     usage_sessions: number
@@ -130,6 +131,19 @@ function generateRandomApiKey() {
   const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
   newMcApiKey.value = Array.from({ length: 16 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('')
   useCustomApiKey.value = true
+}
+
+async function toggleIsAC(mc: MicrocontrollerRecord) {
+  pageError.value = ''
+  try {
+    await $fetch('/api/admin/microcontroller', {
+      method: 'PATCH',
+      body: { id: mc.id, isAC: !mc.isAC }
+    })
+    await refreshMicrocontrollers()
+  } catch {
+    pageError.value = 'Failed to update AC/DC setting.'
+  }
 }
 
 async function removeMicrocontroller(id: number, name: string) {
@@ -269,6 +283,13 @@ async function removeUser(id: string, email: string) {
             <p class="pending-item__meta">Key: <code>{{ mc.api_key }}</code></p>
           </div>
           <div class="pending-item__actions">
+            <label class="ac-dc-toggle" :class="{ 'ac-dc-toggle--on': mc.isAC }" :title="mc.isAC ? 'Switch to DC' : 'Switch to AC'">
+              <input type="checkbox" class="ac-dc-toggle__input" :checked="mc.isAC" @change="toggleIsAC(mc)" />
+              <span class="ac-dc-toggle__track" aria-hidden="true">
+                <span class="ac-dc-toggle__thumb"></span>
+              </span>
+              <span class="ac-dc-toggle__label">{{ mc.isAC ? 'AC' : 'DC' }}</span>
+            </label>
             <button class="danger" @click="removeMicrocontroller(mc.id, mc.name)">Remove</button>
           </div>
       </div>
@@ -570,6 +591,7 @@ async function removeUser(id: string, email: string) {
   opacity: 0.6;
 }
 
+/* ── Generic inline checkbox (used by "Set custom API key") ── */
 .inline-check {
   display: inline-flex;
   align-items: center;
@@ -638,6 +660,94 @@ async function removeUser(id: string, email: string) {
 }
 
 .inline-check__input:focus-visible + .inline-check__box {
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* ── AC / DC pill toggle switch ── */
+.ac-dc-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ac-dc-toggle__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Track */
+.ac-dc-toggle__track {
+  position: relative;
+  width: 2.6rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: rgba(200, 120, 30, 0.35);
+  border: 1px solid rgba(200, 120, 30, 0.55);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition:
+    background 0.28s ease,
+    border-color 0.28s ease,
+    box-shadow 0.28s ease;
+  flex-shrink: 0;
+}
+
+.ac-dc-toggle--on .ac-dc-toggle__track {
+  background: rgba(34, 197, 94, 0.3);
+  border-color: rgba(34, 197, 94, 0.6);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(34, 197, 94, 0.25);
+}
+
+/* Thumb */
+.ac-dc-toggle__thumb {
+  position: absolute;
+  top: 50%;
+  left: 0.18rem;
+  transform: translateY(-50%);
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #f5c06a, #d97706);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  transition:
+    left 0.28s cubic-bezier(0.34, 1.3, 0.64, 1),
+    background 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.ac-dc-toggle--on .ac-dc-toggle__thumb {
+  left: calc(100% - 0.18rem - 0.9rem);
+  background: linear-gradient(145deg, #86efac, #22c55e);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.4),
+    0 0 6px rgba(34, 197, 94, 0.5);
+}
+
+/* Label text */
+.ac-dc-toggle__label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  min-width: 1.6rem;
+  color: #d97706;
+  transition: color 0.25s ease;
+}
+
+.ac-dc-toggle--on .ac-dc-toggle__label {
+  color: #4ade80;
+}
+
+/* Hover glow */
+.ac-dc-toggle:hover .ac-dc-toggle__track {
+  filter: brightness(1.15);
+}
+
+/* Focus ring */
+.ac-dc-toggle__input:focus-visible ~ .ac-dc-toggle__track {
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
