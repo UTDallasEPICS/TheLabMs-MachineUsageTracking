@@ -18,12 +18,13 @@
 const char* WIFI_SSID     = "EPICS115";
 const char* WIFI_PASSWORD = "epicsHotspot115";
 const char* SERVER_URL    = "http://172.20.10.11:3000/api/microcontroller/sensor";
+const char* MODE_URL      = "http://172.20.10.11:3000/api/microcontroller/mode";
 const char* API_KEY       = "mByj6Y2qUfe1b1gX";
 const char* MACHINE_ID    = "Vacuum";
 
 #define CURRENT_PIN       A0
 #define VOLTAGE_THRESHOLD 0.1   // ← Adjust after seeing your readings
-#define AC_MODE           false  // ← false = DC, true = AC
+#define DEFAULT_AC_MODE   false  // ← fallback if server mode request fails
 
 // ═══════════════════════════════════════════
 //  🔒  DO NOT CHANGE BELOW
@@ -40,6 +41,7 @@ const int   DAYLIGHT_OFFSET = 3600;
 
 bool          lastMachineState = false;
 unsigned long lastPrintTime    = 0;
+bool          isACMode         = DEFAULT_AC_MODE;
 
 // ─────────────────────────────────────────
 // Get timestamp
@@ -54,7 +56,7 @@ String getTimestamp() {
 
 // ─────────────────────────────────────────
 // Read voltage — automatically handles
-// AC (RMS) and DC (average) based on AC_MODE
+// AC (RMS) and DC (average) based on runtime mode
 // ─────────────────────────────────────────
 float readVoltage() {
   float sumSquares = 0;
@@ -65,7 +67,7 @@ float readVoltage() {
     float voltage  = (raw / ADC_MAX) * ADC_VREF;
     float centered = voltage - ZERO_POINT;
 
-    if (AC_MODE) {
+    if (isACMode) {
       sumSquares += centered * centered;
     } else {
       sum += analogRead(CURRENT_PIN);
@@ -74,12 +76,90 @@ float readVoltage() {
     delayMicroseconds(100);
   }
 
-  if (AC_MODE) {
+  if (isACMode) {
     return sqrt(sumSquares / SAMPLES);
-  } else {
-    float avgADC = sum / (float)SAMPLES;
-    return (avgADC / ADC_MAX) * ADC_VREF;
   }
+
+  float avgADC = sum / (float)SAMPLES;
+  return (avgADC / ADC_MAX) * ADC_VREF;
+}
+
+// Ask server for AC/DC mode at the startup
+// Accepts: {"mode":"AC"|"DC"} or {"ac_mode":true|false}
+bool fetchModeFromServer() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi not connected — cannot fetch mode");
+    return false;
+  }
+
+  StaticJsonDocument<128> requestDoc;
+  requestDoc["machine_id"] = MACHINE_ID;
+
+  String requestPayload;
+  serializeJson(requestDoc, requestPayload);
+
+  HTTPClient http;
+  http.begin(MODE_URL);
+  http.addHeader("x-api-key", API_KEY);
+  http.addHeader("Content-Type", "application/json");
+  http.setTimeout(5000);
+
+  int responseCode = http.POST(requestPayload);
+
+  if (responseCode <= 0) {
+    Serial.print("Mode fetch connection error : ");
+    Serial.println(http.errorToString(responseCode));
+    http.end();
+    return false;
+  }
+
+  if (responseCode != 200) {
+    Serial.print("Mode fetch server error : ");
+    Serial.println(responseCode);
+    Serial.println(http.getString());
+    http.end();
+    return false;
+  }
+
+  String responseBody = http.getString();
+  http.end();
+
+  StaticJsonDocument<192> responseDoc;
+  DeserializationError err = deserializeJson(responseDoc, responseBody);
+  if (err) {
+    Serial.print("Mode fetch parse error : ");
+    Serial.println(err.c_str());
+    return false;
+  }
+
+  if (responseDoc.containsKey("mode")) {
+    String mode = responseDoc["mode"].as<String>();
+    mode.toUpperCase();
+    if (mode == "AC") {
+      isACMode = true;
+      return true;
+    }
+    if (mode == "DC") {
+      isACMode = false;
+      return true;
+    }
+  }
+
+  if (responseDoc.containsKey("type")) {
+    String type = responseDoc["type"].as<String>();
+    type.toUpperCase();
+    if (type == "AC") {
+      isACMode = true;
+      return true;
+    }
+    if (type == "DC") {
+      isACMode = false;
+      return true;
+    }
+  }
+
+  Serial.println("Mode response missing valid AC/DC value");
+  return false;
 }
 
 // ─────────────────────────────────────────
@@ -146,7 +226,7 @@ void setup() {
   Serial.println("=========================================");
   Serial.println("      EPICS Machine Tracking Tool       ");
   Serial.print  ("      Mode : ");
-  Serial.println(AC_MODE ? "AC Current" : "DC Current");
+  Serial.println("Waiting for server mode");
   Serial.println("=========================================");
 
   Serial.print("Connecting to WiFi");
@@ -163,9 +243,22 @@ void setup() {
     Serial.println("\nWiFi Connected!");
     Serial.print("IP : ");
     Serial.println(WiFi.localIP());
+    Serial.println("Requesting mode from server...");
+    if (fetchModeFromServer()) {
+      Serial.print("Server mode applied : ");
+      Serial.println(isACMode ? "AC" : "DC");
+    } else {
+      isACMode = DEFAULT_AC_MODE;
+      Serial.print("Using fallback mode : ");
+      Serial.println(isACMode ? "AC" : "DC");
+    }
   } else {
     Serial.println("\nWiFi Failed!");
+    isACMode = DEFAULT_AC_MODE;
   }
+
+  Serial.print("Active sensing mode : ");
+  Serial.println(isACMode ? "AC Current" : "DC Current");
 
   Serial.print("Syncing time");
   configTime(GMT_OFFSET, DAYLIGHT_OFFSET, NTP_SERVER);
@@ -228,7 +321,7 @@ void loop() {
     Serial.println("!!! STATE CHANGED !!!");
     Serial.println("┌─────────────────────────────────────┐");
     Serial.print  ("│ Machine : "); Serial.println(MACHINE_ID);
-    Serial.print  ("│ Mode    : "); Serial.println(AC_MODE ? "AC" : "DC");
+    Serial.print  ("│ Mode    : "); Serial.println(isACMode ? "AC" : "DC");
     Serial.print  ("│ Time    : "); Serial.println(timestamp);
     Serial.print  ("│ Voltage : "); Serial.print(voltage, 4); Serial.println(" V");
     Serial.print  ("│ Current : "); Serial.print(current, 4); Serial.println(" A");
