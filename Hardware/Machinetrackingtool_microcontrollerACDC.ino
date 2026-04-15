@@ -18,7 +18,7 @@
 const char* WIFI_SSID     = "EPICS115";
 const char* WIFI_PASSWORD = "epicsHotspot115";
 const char* SERVER_URL    = "http://172.20.10.11:3000/api/microcontroller/sensor";
-const char* MODE_URL      = "http://172.20.10.11:3000/api/microcontroller/mode";
+const char* MODE_URL      = "http://172.20.10.11:3000/api/microcontroller/mode/modeChange";
 const char* API_KEY       = "mByj6Y2qUfe1b1gX";
 const char* MACHINE_ID    = "Vacuum";
 
