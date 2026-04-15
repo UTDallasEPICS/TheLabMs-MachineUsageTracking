@@ -14,7 +14,9 @@
       "Bash(sqlite3 prisma/dev.db \"SELECT id, started_at, ended_at FROM MachineUsageSession ORDER BY id;\")",
       "Bash(sqlite3 prisma/dev.db \"SELECT mc.id, mc.name, s.started_at FROM MachineUsageSession s JOIN Microcontroller mc ON s.microcontroller_id = mc.id WHERE s.ended_at IS NULL;\")",
       "Bash(sqlite3 prisma/dev.db \"UPDATE MachineUsageSession SET ended_at = 1775059794000 WHERE id = 4;\")",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)"
     ]
   }
 }
