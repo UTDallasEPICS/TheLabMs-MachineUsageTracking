@@ -6,8 +6,10 @@ export default defineEventHandler(async (event) => {
 
   // Public read endpoints used by the dashboard (user-session auth, not machine API key).
   if (event.path === '/api/microcontroller/usage') return
+  if (event.path === '/api/microcontroller/active') return
   if (event.path.startsWith('/api/microcontroller/calendar')) return
   if (event.path.startsWith('/api/microcontroller/timeline')) return
+  if (event.path.startsWith('/api/microcontroller/range-totals')) return
 
   const apiKey = getHeader(event, 'x-api-key')
   if (!apiKey) throw createError({ statusCode: 401, message: 'No API key' })

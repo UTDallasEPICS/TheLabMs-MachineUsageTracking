@@ -11,7 +11,7 @@
           <span class="live-dot" aria-hidden="true"></span>
           Updated {{ formattedGeneratedAt }}
         </span>
-        <button class="refresh-btn" @click="refresh()">Refresh</button>
+        <button class="refresh-btn" @click="handleRefresh">Refresh</button>
       </div>
     </div>
 
@@ -84,6 +84,68 @@
         </template>
       </Card>
 
+      <!-- ── Range Totals Card ── -->
+      <Card>
+        <template #title>
+          <h2 class="card-title">Machine Totals</h2>
+        </template>
+
+        <template #stats>
+          <div class="range-controls">
+            <label class="range-field">
+              <span class="range-label">Range</span>
+              <select v-model="rangePreset" class="range-select">
+                <option value="viewed_month">Viewed month</option>
+                <option value="last_7_days">Last 7 days</option>
+                <option value="last_30_days">Last 30 days</option>
+                <option value="custom">Custom</option>
+              </select>
+            </label>
+
+            <label v-if="rangePreset === 'custom'" class="range-field">
+              <span class="range-label">Start</span>
+              <input v-model="customRangeStart" type="date" class="range-input" />
+            </label>
+
+            <label v-if="rangePreset === 'custom'" class="range-field">
+              <span class="range-label">End</span>
+              <input v-model="customRangeEnd" type="date" class="range-input" />
+            </label>
+          </div>
+
+          <div class="range-summary">
+            <span v-if="effectiveRange" class="range-dates">
+              {{ effectiveRange.start }} to {{ effectiveRange.end }}
+            </span>
+            <span v-if="!effectiveRange" class="empty-state">
+              Select valid start and end dates.
+            </span>
+            <span v-if="effectiveRange" class="range-total">
+              Total: {{ formatDuration(rangeGrandTotalSeconds) }}
+            </span>
+          </div>
+
+          <div v-if="rangeTotalsPending && !rangeTotalsData" class="empty-state">
+            Loading totals...
+          </div>
+          <div v-else-if="rangeTotalsError" class="empty-state">
+            Could not load range totals.
+          </div>
+          <div v-else-if="!rangeMachines.length" class="empty-state">
+            No machines in this range.
+          </div>
+          <div v-else class="range-list">
+            <div v-for="machine in rangeMachines" :key="machine.id" class="range-row">
+              <div class="range-row-main">
+                <span class="chip-dot" :style="{ background: machineColor(machine.id) }"></span>
+                <span class="range-machine-name">{{ machine.name }}</span>
+              </div>
+              <span class="range-machine-time">{{ formatDuration(machine.totalSeconds) }}</span>
+            </div>
+          </div>
+        </template>
+      </Card>
+
       <!-- ── Machine Filter Card ── -->
       <Card>
         <template #title>
@@ -141,6 +203,8 @@ definePageMeta({
 type CalendarDay = { date: string; totalSeconds: number }
 type CalendarMachine = { id: number; name: string; days: CalendarDay[] }
 type CalendarResponse = { year: number; month: number; machines: CalendarMachine[] }
+type RangeMachineTotal = { id: number; name: string; totalSeconds: number }
+type RangeTotalsResponse = { startDate: string; endDate: string; machines: RangeMachineTotal[] }
 
 // ── Date state ───────────────────────────────────────────────
 const now = new Date()
@@ -172,6 +236,87 @@ const { data, pending: calPending, error: calError, refresh } = await useFetch<C
 
 const isInitialLoad = computed(() => calPending.value && !data.value)
 const formattedGeneratedAt = computed(() => new Date().toLocaleTimeString())
+
+// ── Range totals ────────────────────────────────────────────
+const rangePreset = ref<'viewed_month' | 'last_7_days' | 'last_30_days' | 'custom'>('viewed_month')
+const customRangeStart = ref('')
+const customRangeEnd = ref('')
+
+type DateRange = { start: string; end: string }
+
+function formatDateInput(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+const effectiveRange = computed<DateRange | null>(() => {
+  const today = new Date()
+
+  if (rangePreset.value === 'viewed_month') {
+    const start = new Date(selectedYear.value, selectedMonth.value - 1, 1)
+    const end = new Date(selectedYear.value, selectedMonth.value, 0)
+    return { start: formatDateInput(start), end: formatDateInput(end) }
+  }
+
+  if (rangePreset.value === 'last_7_days') {
+    const end = new Date(today)
+    const start = new Date(today)
+    start.setDate(start.getDate() - 6)
+    return { start: formatDateInput(start), end: formatDateInput(end) }
+  }
+
+  if (rangePreset.value === 'last_30_days') {
+    const end = new Date(today)
+    const start = new Date(today)
+    start.setDate(start.getDate() - 29)
+    return { start: formatDateInput(start), end: formatDateInput(end) }
+  }
+
+  if (!customRangeStart.value || !customRangeEnd.value) return null
+  if (customRangeStart.value > customRangeEnd.value) return null
+
+  return {
+    start: customRangeStart.value,
+    end: customRangeEnd.value,
+  }
+})
+
+const { data: rangeTotalsData, pending: rangeTotalsPending, error: rangeTotalsError, refresh: refreshRangeTotals } = await useFetch<RangeTotalsResponse>(
+  '/api/microcontroller/range-totals',
+  {
+    server: false,
+    lazy: true,
+    immediate: false,
+    query: computed(() => {
+      if (!effectiveRange.value) return {}
+      return {
+        start: effectiveRange.value.start,
+        end: effectiveRange.value.end,
+      }
+    }),
+  },
+)
+
+watch(effectiveRange, (range) => {
+  if (!range) return
+  refreshRangeTotals()
+}, { immediate: true })
+
+const rangeMachines = computed(() => {
+  const machineTotals = new Map((rangeTotalsData.value?.machines ?? []).map((m) => [m.id, m.totalSeconds]))
+
+  return allMachines.value
+    .filter((m) => visibleMachineIds.value.has(m.id))
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      totalSeconds: machineTotals.get(m.id) ?? 0,
+    }))
+    .sort((a, b) => b.totalSeconds - a.totalSeconds)
+})
+
+const rangeGrandTotalSeconds = computed(() =>
+  rangeMachines.value.reduce((acc, machine) => acc + machine.totalSeconds, 0)
+)
 
 // ── Active sessions (live timers) ────────────────────────────
 type ActiveSession = { id: number; name: string; startedAt: string }
@@ -208,6 +353,12 @@ onUnmounted(() => {
 
 // Also refresh active sessions when the calendar refreshes
 watch(data, () => refreshActive())
+
+function handleRefresh() {
+  refresh()
+  refreshActive()
+  if (effectiveRange.value) refreshRangeTotals()
+}
 
 // ── Navigation ───────────────────────────────────────────────
 function goToTimeline(dateStr: string) {
@@ -601,6 +752,96 @@ function formatDurationShort(seconds: number): string {
   opacity: 0.8;
 }
 
+/* ── Range totals ── */
+.range-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.range-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.range-label {
+  font-size: 0.72rem;
+  opacity: 0.65;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.range-select,
+.range-input {
+  min-height: 2.1rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(128, 176, 224, 0.2);
+  background: rgba(16, 38, 58, 0.55);
+  color: inherit;
+  font: inherit;
+}
+
+.range-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(128, 176, 224, 0.12);
+  border-bottom: 1px solid rgba(128, 176, 224, 0.12);
+  padding: 0.55rem 0;
+}
+
+.range-dates {
+  font-size: 0.84rem;
+  opacity: 0.82;
+}
+
+.range-total {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.range-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.range-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(16, 38, 58, 0.42);
+  border: 1px solid rgba(128, 176, 224, 0.08);
+}
+
+.range-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.range-machine-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.range-machine-time {
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.88;
+}
+
 /* ── Active session timers ── */
 .active-sessions {
   margin-top: 0.75rem;
@@ -657,6 +898,11 @@ function formatDurationShort(seconds: number): string {
   .cal-month-label {
     min-width: 8rem;
     font-size: 0.95rem;
+  }
+
+  .range-summary {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 
