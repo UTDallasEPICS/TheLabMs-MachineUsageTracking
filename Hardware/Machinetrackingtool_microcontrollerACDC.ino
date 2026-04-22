@@ -10,6 +10,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <time.h>
+#include <math.h>
 
 // ═══════════════════════════════════════════
 //  ✏️  CHANGE THESE
@@ -43,6 +44,13 @@ bool          lastMachineState = false;
 unsigned long lastPrintTime    = 0;
 bool          isACMode         = DEFAULT_AC_MODE;
 
+float toSignalVoltage(float measuredVoltage) {
+  if (isACMode) {
+    return measuredVoltage;
+  }
+  return fabs(measuredVoltage - ZERO_POINT);
+}
+
 // ─────────────────────────────────────────
 // Get timestamp
 // ─────────────────────────────────────────
@@ -60,7 +68,7 @@ String getTimestamp() {
 // ─────────────────────────────────────────
 float readVoltage() {
   float sumSquares = 0;
-  long  sum        = 0;
+  float sumVoltage = 0;
 
   for (int i = 0; i < SAMPLES; i++) {
     float raw      = analogRead(CURRENT_PIN);
@@ -70,7 +78,7 @@ float readVoltage() {
     if (isACMode) {
       sumSquares += centered * centered;
     } else {
-      sum += analogRead(CURRENT_PIN);
+      sumVoltage += voltage;
     }
 
     delayMicroseconds(100);
@@ -80,8 +88,7 @@ float readVoltage() {
     return sqrt(sumSquares / SAMPLES);
   }
 
-  float avgADC = sum / (float)SAMPLES;
-  return (avgADC / ADC_MAX) * ADC_VREF;
+  return sumVoltage / (float)SAMPLES;
 }
 
 // Ask server for AC/DC mode at the startup
@@ -92,19 +99,21 @@ bool fetchModeFromServer() {
     return false;
   }
 
-  StaticJsonDocument<128> requestDoc;
-  requestDoc["machine_id"] = MACHINE_ID;
-
-  String requestPayload;
-  serializeJson(requestDoc, requestPayload);
-
   HTTPClient http;
   http.begin(MODE_URL);
   http.addHeader("x-api-key", API_KEY);
-  http.addHeader("Content-Type", "application/json");
   http.setTimeout(5000);
 
-  int responseCode = http.POST(requestPayload);
+  int responseCode = http.GET();
+
+  // Backward compatibility if route expects POST.
+  if (responseCode == 404 || responseCode == 405) {
+    http.end();
+    http.begin(MODE_URL);
+    http.addHeader("x-api-key", API_KEY);
+    http.addHeader("Content-Type", "application/json");
+    responseCode = http.POST("{}");
+  }
 
   if (responseCode <= 0) {
     Serial.print("Mode fetch connection error : ");
@@ -158,6 +167,16 @@ bool fetchModeFromServer() {
     }
   }
 
+  if (responseDoc.containsKey("ac_mode")) {
+    isACMode = responseDoc["ac_mode"].as<bool>();
+    return true;
+  }
+
+  if (responseDoc.containsKey("isAC")) {
+    isACMode = responseDoc["isAC"].as<bool>();
+    return true;
+  }
+
   Serial.println("Mode response missing valid AC/DC value");
   return false;
 }
@@ -167,7 +186,14 @@ bool fetchModeFromServer() {
 // ─────────────────────────────────────────
 float voltageToCurrent(float voltage) {
   float sensitivity = 0.133 * (ADC_VREF / 5.0);
-  float current     = (voltage - ZERO_POINT) / sensitivity;
+  float current;
+
+  if (isACMode) {
+    current = voltage / sensitivity;
+  } else {
+    current = (voltage - ZERO_POINT) / sensitivity;
+  }
+
   if (current < 0) current = 0;
   return current;
 }
@@ -182,9 +208,9 @@ void sendToServer(bool machineOn, float voltage, float current, String timestamp
   }
 
   StaticJsonDocument<256> doc;
-  doc["machine_id"]    = MACHINE_ID;
   doc["machine_state"] = machineOn;
   doc["timestamp"]     = timestamp;
+  doc["isAC"]          = isACMode;
   doc["voltage"]       = voltage;
   doc["current_A"]     = current;
 
@@ -277,12 +303,17 @@ void setup() {
   Serial.println("=========================================");
 
   float initialVoltage = readVoltage();
+  float initialSignal  = toSignalVoltage(initialVoltage);
   float initialCurrent = voltageToCurrent(initialVoltage);
-  lastMachineState     = initialVoltage > VOLTAGE_THRESHOLD;
+  lastMachineState     = initialSignal > VOLTAGE_THRESHOLD;
 
   Serial.print("Initial voltage : "); Serial.print(initialVoltage, 4); Serial.println(" V");
+  Serial.print("Initial signal  : "); Serial.print(initialSignal, 4); Serial.println(" V");
   Serial.print("Initial current : "); Serial.print(initialCurrent, 4); Serial.println(" A");
   Serial.print("Initial state   : "); Serial.println(lastMachineState ? "ON" : "OFF");
+
+  // Keep server session state aligned after every restart.
+  sendToServer(lastMachineState, initialVoltage, initialCurrent, getTimestamp());
 }
 
 // ─────────────────────────────────────────
@@ -296,9 +327,10 @@ void loop() {
     delay(3000);
   }
 
-  float voltage  = readVoltage();
-  float current  = voltageToCurrent(voltage);
-  bool  machineOn = voltage > VOLTAGE_THRESHOLD;
+  float voltage   = readVoltage();
+  float signal    = toSignalVoltage(voltage);
+  float current   = voltageToCurrent(voltage);
+  bool  machineOn = signal > VOLTAGE_THRESHOLD;
 
   // Print every second
   unsigned long now = millis();
@@ -306,6 +338,8 @@ void loop() {
     lastPrintTime = now;
     Serial.print("Voltage : ");
     Serial.print(voltage, 4);
+    Serial.print(" V  |  Signal : ");
+    Serial.print(signal, 4);
     Serial.print(" V  |  Current : ");
     Serial.print(current, 4);
     Serial.print(" A  |  Status : ");
