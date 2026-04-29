@@ -1,3 +1,9 @@
+/*
+  server/api/admin/deny.post.ts
+  Rejects a pending user signup request by deleting the PendingUser record.
+  The applicant's email is freed immediately and can be re-used for a new request.
+  Requires admin session.
+*/
 import prisma from '../../lib/prisma'
 import { requireAdminUser } from '../../utils/admin-auth'
 

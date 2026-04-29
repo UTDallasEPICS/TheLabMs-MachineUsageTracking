@@ -1,3 +1,10 @@
+<!--
+  app/pages/admin/change-password.vue
+  Allows an authenticated admin to change their own password while logged in.
+  Submits current and new passwords to POST /api/admin/password/change.
+  Enforces minimum 8-character password length on the client before sending.
+  Requires admin session (enforced by 'admin' middleware).
+-->
 <script setup lang="ts">
 definePageMeta({ middleware: 'admin' })
 

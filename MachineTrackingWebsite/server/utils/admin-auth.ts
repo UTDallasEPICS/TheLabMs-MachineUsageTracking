@@ -1,3 +1,11 @@
+/* 
+server/utils/admin-auth.ts
+Shared guard used by every admin API route.
+requireAdminUser() verifies that the current session belongs to a user whose role
+is 'admin' both in the session cookie and in the live database row, preventing
+stale session tokens from granting elevated access after a role change. 
+*/
+
 import type { H3Event } from 'h3'
 import prisma from '../lib/prisma'
 

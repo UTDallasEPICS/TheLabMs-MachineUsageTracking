@@ -1,3 +1,13 @@
+/* 
+server/api/microcontroller/mode/modeChange.ts
+Read-only endpoint called by a microcontroller to discover its current AC/DC
+mode setting as configured by an admin in the dashboard.
+Re-fetches the Microcontroller row from the database to guarantee the latest
+isAC value even if the middleware context is cached.
+Returns { mode: 'AC' | 'DC' }.
+Requires a valid x-api-key header (enforced by microcontroller-auth middleware). 
+*/
+
 import prisma from '../../../lib/prisma'
 
 export default defineEventHandler(async (event) => {

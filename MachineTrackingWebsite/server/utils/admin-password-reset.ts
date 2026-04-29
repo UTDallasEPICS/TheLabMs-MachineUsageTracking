@@ -1,3 +1,14 @@
+/*
+server/utils/admin-password-reset.ts
+Stateless HMAC-signed password-reset token logic for admin accounts.
+createAdminResetToken() embeds the user id, email, expiry, and a prefix of the
+current password hash so that the token is automatically invalidated after any
+password change. verifyAdminResetToken() validates the signature, checks expiry,
+and re-fetches the admin from the database to confirm the account still exists
+and has not changed its password since the token was issued.
+Token TTL is 15 minutes.
+*/
+
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import prisma from '../lib/prisma'
 

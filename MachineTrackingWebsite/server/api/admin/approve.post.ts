@@ -1,3 +1,10 @@
+/*
+  server/api/admin/approve.post.ts
+  Approves a pending user signup request.
+  Atomically creates a full User account from the PendingUser record and then
+  deletes the pending entry, so the email cannot be approved twice.
+  Requires admin session.
+*/
 import prisma from '../../lib/prisma'
 import { requireAdminUser } from '../../utils/admin-auth'
 

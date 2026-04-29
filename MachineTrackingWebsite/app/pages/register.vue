@@ -1,3 +1,10 @@
+<!--
+  app/pages/register.vue
+  Public signup request form for new users.
+  Submits to POST /api/auth/register which creates a PendingUser record rather
+  than a live account — admin approval is required before the user can log in.
+  Shows a success message after submission and prevents double-submission.
+-->
 <script setup lang="ts">
 const email = ref('')
 const password = ref('')

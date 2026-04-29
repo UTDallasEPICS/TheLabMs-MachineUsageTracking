@@ -1,4 +1,13 @@
-// server/middleware/microcontroller-auth.ts
+/*
+server/middleware/microcontroller-auth.ts
+Nitro server middleware that guards every /api/microcontroller/* write route.
+Read-only dashboard endpoints (usage, active, calendar, timeline, range-totals)
+are whitelisted so they remain accessible via user-session auth instead.
+For all other microcontroller routes the middleware expects an x-api-key header,
+looks it up in the database, and attaches the matching Microcontroller record to
+event.context.microcontroller so downstream handlers can use it without re-querying.
+*/
+
 import prisma from '../lib/prisma'
 
 export default defineEventHandler(async (event) => {

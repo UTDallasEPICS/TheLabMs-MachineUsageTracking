@@ -1,3 +1,12 @@
+/* 
+server/api/microcontroller/session/start.post.ts
+Manual session-start endpoint for microcontrollers that manage sessions
+explicitly rather than via the sensor.post signal.
+Closes any currently open session for this device before creating a new one,
+ensuring only one active session exists at a time.
+Requires a valid x-api-key header (enforced by microcontroller-auth middleware). 
+*/
+
 import prisma from '../../../../server/lib/prisma'
 
 export default defineEventHandler(async (event) => {

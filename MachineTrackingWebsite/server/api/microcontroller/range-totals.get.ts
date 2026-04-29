@@ -1,3 +1,13 @@
+/* 
+server/api/microcontroller/range-totals.get.ts
+Returns total active seconds and minutes per machine over an arbitrary date
+range supplied as ?start=YYYY-MM-DD&end=YYYY-MM-DD query params.
+Sessions are clipped to the window boundaries via calculateSessionSeconds()
+so partial-overlap sessions at either end of the range are counted correctly.
+Returns { startDate, endDate, machines[{ id, name, totalSeconds, totalMinutes }] }.
+Requires an active user session. 
+*/
+
 import prisma from '../../lib/prisma'
 import { calculateSessionSeconds } from '../../utils/session-seconds'
 

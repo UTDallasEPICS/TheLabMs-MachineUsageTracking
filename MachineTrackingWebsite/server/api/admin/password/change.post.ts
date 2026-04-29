@@ -1,3 +1,10 @@
+/*
+  server/api/admin/password/change.post.ts
+  Allows an authenticated admin to change their own password by providing their
+  current password for verification before setting a new one (minimum 8 characters).
+  The new password is hashed with bcrypt before being stored.
+  Requires admin session.
+*/
 import { compare, hash } from 'bcrypt-ts'
 import prisma from '../../../lib/prisma'
 import { requireAdminUser } from '../../../utils/admin-auth'

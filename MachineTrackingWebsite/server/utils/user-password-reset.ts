@@ -1,3 +1,14 @@
+/* 
+server/utils/user-password-reset.ts
+Stateless HMAC-signed password-reset token logic for regular user accounts.
+Mirror of admin-password-reset.ts but scoped to role === 'user'.
+createUserResetToken() encodes user id, email, expiry, and a password-hash prefix
+into a signed base64url token. verifyUserResetToken() validates the signature,
+checks expiry, re-queries the database, and confirms the user's password has not
+been changed since the token was generated.
+Token TTL is 15 minutes. 
+*/
+
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import prisma from '../lib/prisma'
 

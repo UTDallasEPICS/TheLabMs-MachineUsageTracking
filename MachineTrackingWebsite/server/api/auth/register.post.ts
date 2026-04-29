@@ -1,3 +1,11 @@
+/* 
+server/api/auth/register.post.ts
+Handles new account requests from the public registration form.
+Does NOT create a User directly — instead creates a PendingUser record that
+waits for admin approval. Validates password length, checks for duplicate
+accounts in both User and PendingUser tables, then stores the bcrypt hash. 
+*/
+
 import { hash } from 'bcrypt-ts'
 import prisma from '../../lib/prisma'
 

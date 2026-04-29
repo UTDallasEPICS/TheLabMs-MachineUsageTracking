@@ -1,3 +1,10 @@
+/* 
+server/api/auth/password/reset.post.ts
+Completes the regular-user password-reset flow. Verifies the signed token,
+hashes the new password, updates the database, and invalidates all existing
+sessions for that user in a single transaction. 
+*/
+
 import { hash } from 'bcrypt-ts'
 import prisma from '../../../lib/prisma'
 import { verifyUserResetToken } from '../../../utils/user-password-reset'

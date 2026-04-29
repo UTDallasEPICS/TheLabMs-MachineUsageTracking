@@ -1,3 +1,11 @@
+/* 
+server/api/microcontroller/session/end.post.ts
+Manual session-end endpoint for microcontrollers that manage sessions explicitly.
+Finds the single open MachineUsageSession for this device and stamps ended_at.
+Returns 404 if no active session exists.
+Requires a valid x-api-key header (enforced by microcontroller-auth middleware). 
+*/
+
 import prisma from '../../../../server/lib/prisma'
 
 export default defineEventHandler(async (event) => {
