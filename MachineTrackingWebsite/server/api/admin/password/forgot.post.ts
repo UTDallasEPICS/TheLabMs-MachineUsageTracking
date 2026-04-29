@@ -30,12 +30,8 @@ export default defineEventHandler(async (event) => {
 
   await sendAdminResetEmail(admin.email, resetUrl)
 
-  const isDevelopment = process.env.NODE_ENV !== 'production'
-
   return {
     ok: true,
-    message: `If the email is valid, reset instructions will be sent. Link expires in ${getAdminResetTtlMinutes()} minutes.`,
-    // Local/dev helper so reset works without SMTP while keeping production safe.
-    devResetUrl: isDevelopment ? resetUrl : undefined
+    message: `If the email is valid, reset instructions will be sent. Link expires in ${getAdminResetTtlMinutes()} minutes.`
   }
 })

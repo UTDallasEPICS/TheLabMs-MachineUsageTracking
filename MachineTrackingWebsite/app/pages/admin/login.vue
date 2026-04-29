@@ -9,7 +9,6 @@ const loading = ref(false)
 const forgotLoading = ref(false)
 const errorMessage = ref('')
 const forgotMessage = ref('')
-const devResetUrl = ref('')
 
 const redirectTarget = computed(() => {
   const target = route.query.redirect
@@ -53,16 +52,15 @@ async function sendForgotPassword() {
   forgotLoading.value = true
   errorMessage.value = ''
   forgotMessage.value = ''
-  devResetUrl.value = ''
 
   try {
-    const result = await $fetch<{ devResetUrl?: string }>('/api/admin/password/forgot', {
+    await $fetch('/api/admin/password/forgot', {
       method: 'POST',
       body: { email: email.value.trim().toLowerCase() }
     })
 
     forgotMessage.value = 'If this is a valid admin email, reset instructions were sent.'
-    devResetUrl.value = result?.devResetUrl || ''
+    
   } catch (error: unknown) {
     const message = (error as { data?: { message?: string } })?.data?.message
     errorMessage.value = message || 'Could not process password reset request.'
@@ -90,7 +88,6 @@ async function sendForgotPassword() {
 
       <p v-if="errorMessage" class="admin-login__error">{{ errorMessage }}</p>
       <p v-if="forgotMessage" class="admin-login__success">{{ forgotMessage }}</p>
-      <a v-if="devResetUrl" class="admin-login__link" :href="devResetUrl">Open reset link (dev)</a>
 
       <button type="submit" :disabled="loading">
         {{ loading ? 'Signing in...' : 'Sign in as Admin' }}

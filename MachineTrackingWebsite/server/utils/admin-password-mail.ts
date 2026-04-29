@@ -1,35 +1,17 @@
+import { sendMail } from '../lib/mailer'
+
 export async function sendAdminResetEmail(to: string, resetUrl: string): Promise<void> {
-  const smtpHost = process.env.SMTP_HOST
-  const smtpPort = Number(process.env.SMTP_PORT || 587)
-  const smtpUser = process.env.SMTP_USER
-  const smtpPass = process.env.SMTP_PASS
-  const mailFrom = process.env.MAIL_FROM
+  const subject = 'Admin password reset'
+  const text = `A password reset was requested for your admin account. Use this link: ${resetUrl}`
+  const html = `<p>A password reset was requested for your admin account.</p>
+                <p><a href="${resetUrl}">Reset your admin password</a></p>
+                <p>If the link doesn't work, copy and paste this URL into your browser:</p>
+                <p>${resetUrl}</p>`
 
-  if (smtpHost && smtpUser && smtpPass && mailFrom) {
-    try {
-      const nodemailer = await import('nodemailer')
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: {
-          user: smtpUser,
-          pass: smtpPass
-        }
-      })
-
-      await transporter.sendMail({
-        from: mailFrom,
-        to,
-        subject: 'Admin password reset',
-        text: `A password reset was requested for your admin account. Use this link: ${resetUrl}`
-      })
-      return
-    } catch (error) {
-      console.error('[admin-password-mail] SMTP send failed, falling back to log output:', error)
-    }
+  try {
+    await sendMail({ to, subject, text, html })
+  } catch (err) {
+    console.error('[admin-password-mail] sendMail failed, falling back to log output:', err)
+    console.info(`[admin-password-mail] Reset link for ${to}: ${resetUrl}`)
   }
-
-  // Development fallback when SMTP is not configured.
-  console.info(`[admin-password-mail] Reset link for ${to}: ${resetUrl}`)
 }

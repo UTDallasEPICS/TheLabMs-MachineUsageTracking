@@ -1,7 +1,8 @@
 @echo off
-setlocal
+setlocal EnableExtensions DisableDelayedExpansion
 
 cd /d "%~dp0"
+
 
 if not exist ".env" (
   if exist ".env.example" (
@@ -48,6 +49,14 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+
+:prompt_admin_email
+for /f "usebackq delims=" %%A in (`powershell -NoLogo -NoProfile -Command "$pattern = '^[^\s@]+@[^\s@]+\.[^\s@]+$'; do { $email = Read-Host 'Enter the admin email'; if ($email) { $email = $email.Trim().ToLower() } if ($email -and $email -match $pattern) { $email } else { Write-Host 'Please enter a valid email address, like name@domain.com.' } } while (-not ($email -and $email -match $pattern))"`) do set "ADMIN_EMAIL=%%A"
+
+:prompt_admin_password
+set "ADMIN_PASSWORD="
+for /f "usebackq delims=" %%A in (`powershell -NoLogo -NoProfile -Command "$password = Read-Host 'Enter the admin password' -AsSecureString; $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($password); try { [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr) } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }"`) do set "ADMIN_PASSWORD=%%A"
+if not defined ADMIN_PASSWORD goto prompt_admin_password
 
 echo Starting Nuxt dev server...
 call pnpm run dev --host
