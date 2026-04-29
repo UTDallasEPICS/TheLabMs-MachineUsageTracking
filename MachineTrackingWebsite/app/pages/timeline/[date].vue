@@ -38,7 +38,8 @@
                     class="gantt-tick"
                     :style="{ left: (tick.ms / DAY_MS) * 100 + '%' }"
                   >
-                    <span class="tick-label">{{ tick.label }}</span>
+                    <!-- hide the final 24:00 label — it always overflows the right edge -->
+                    <span v-if="tick.ms < DAY_MS" class="tick-label">{{ tick.label }}</span>
                   </div>
                 </div>
               </div>
@@ -61,10 +62,10 @@
                       class="gantt-block"
                       :style="{
                         left: session.startPercent + '%',
-                        width: Math.max(0.5, session.widthPercent) + '%',
+                        width: session.widthPercent + '%',
                         background: machineColor(machine.id, index)
                       }"
-                      :title="formatTooltip(session.startedAt, session.endedAt, session.isOngoing)"
+                      :title="formatTooltip(session.startedAt, session.endedAt, session.isOngoing, session.durationSeconds)"
                     ></div>
                   </div>
                 </div>
@@ -181,20 +182,34 @@ function onGanttWheel(e: WheelEvent) {
 }
 
 // ── Dynamic axis ticks
-// Pick the smallest "nice" interval (in ms) so ticks are ≥ 60px apart.
+const LABEL_COL_PX = 150  // width of the machine-name column that eats into the axis
+
 const TICK_INTERVALS_MS = [
-  2 * 3600_000, 3600_000,          // 2h, 1h
-  30 * 60_000, 15 * 60_000, 10 * 60_000, 5 * 60_000, 60_000, // 30m…1m
-  30_000, 10_000, 5_000, 1_000,    // 30s, 10s, 5s, 1s
-  500, 100, 50, 10, 5, 1,          // 500ms … 1ms
+  2 * 3600_000, 3600_000,
+  30 * 60_000, 15 * 60_000, 10 * 60_000, 5 * 60_000, 60_000,
+  30_000, 10_000, 5_000, 1_000,
+  500, 100, 50, 10, 5, 1,
 ]
 
-const axisTicks = computed(() => {
-  const trackPx = BASE_WIDTH_PX * zoomLevel.value
-  const pxPerMs = trackPx / DAY_MS
+// Approximate rendered width of each label format at font-size 0.75rem (~12px).
+// HH:MM        → 5 chars  × ~7.5px ≈ 38px  → use 55px with padding
+// HH:MM:SS     → 8 chars  × ~7.5px ≈ 60px  → use 80px
+// HH:MM:SS.mmm → 12 chars × ~7.5px ≈ 90px  → use 110px
+function labelMinGap(interval: number): number {
+  if (interval >= 60_000) return 55
+  if (interval >= 1_000)  return 80
+  return 110
+}
 
-  // smallest interval where adjacent ticks are at least 60px apart
-  const interval: number = TICK_INTERVALS_MS.find(iv => iv * pxPerMs >= 60) ?? 1
+const axisTicks = computed(() => {
+  // Use the real axis width: gantt container minus the fixed label column
+  const axisPx = BASE_WIDTH_PX * zoomLevel.value - LABEL_COL_PX
+  const pxPerMs = axisPx / DAY_MS
+
+  // Walk finest → coarsest; pick the smallest interval whose ticks still clear their label width.
+  // (Searching coarsest→finest would always return 2 h regardless of zoom level.)
+  const interval: number =
+    [...TICK_INTERVALS_MS].reverse().find(iv => iv * pxPerMs >= labelMinGap(iv)) ?? 2 * 3600_000
 
   const ticks: { ms: number; label: string }[] = []
   for (let ms = 0; ms <= DAY_MS; ms += interval) {
@@ -204,13 +219,13 @@ const axisTicks = computed(() => {
 })
 
 function formatTickMs(ms: number, interval: number): string {
-  const h  = Math.floor(ms / 3600_000)
-  const m  = Math.floor((ms % 3600_000) / 60_000)
-  const s  = Math.floor((ms % 60_000) / 1_000)
+  const h   = Math.floor(ms / 3600_000)
+  const m   = Math.floor((ms % 3600_000) / 60_000)
+  const s   = Math.floor((ms % 60_000) / 1_000)
   const ms_ = ms % 1_000
 
-  if (interval >= 60_000)   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
-  if (interval >= 1_000)    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+  if (interval >= 60_000) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
+  if (interval >= 1_000)  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(ms_).padStart(3,'0')}`
 }
 
@@ -230,18 +245,19 @@ function formatTimeMs(d: Date): string {
   return `${hh}:${mm}:${ss}.${ms}`
 }
 
-function formatTooltip(start: string, end: string | null, isOngoing: boolean) {
+function formatTooltip(start: string, end: string | null, isOngoing: boolean, clippedDurationSeconds: number) {
   const dStart = new Date(start)
   const sStr = formatTimeMs(dStart)
   if (isOngoing || !end) return `Started: ${sStr}\nOngoing`
   const dEnd = new Date(end)
   const eStr = formatTimeMs(dEnd)
-  const durMs = dEnd.getTime() - dStart.getTime()
+  // Use the server-clipped duration so sessions spanning midnight never show > 24 h
+  const durMs = clippedDurationSeconds * 1000
   const durStr = durMs < 1000
     ? `${durMs}ms`
     : durMs < 60_000
       ? `${(durMs / 1000).toFixed(3)}s`
-      : formatDuration(durMs / 1000)
+      : formatDuration(clippedDurationSeconds)
   return `Started: ${sStr}\nEnded:   ${eStr}\nDuration: ${durStr}`
 }
 
@@ -287,6 +303,8 @@ const { data, pending, error } = await useFetch(`/api/microcontroller/timeline`,
 })
 </script>
 
+
+// Page styling
 <style scoped>
 .timeline-page {
   padding: 2rem;
@@ -439,6 +457,7 @@ const { data, pending, error } = await useFetch(`/api/microcontroller/timeline`,
   flex: 1;
   position: relative;
   height: 20px;
+  overflow: visible;
 }
 
 .gantt-tick {
@@ -520,6 +539,7 @@ const { data, pending, error } = await useFetch(`/api/microcontroller/timeline`,
 .gantt-block {
   position: absolute;
   height: 24px;
+  min-width: 2px;
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s, filter 0.2s;
