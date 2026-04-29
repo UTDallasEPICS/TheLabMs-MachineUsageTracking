@@ -1,3 +1,11 @@
+/*
+  server/api/admin/user.delete.ts
+  Deletes a user account and all associated sessions.
+  Two safety guards are enforced: an admin cannot delete their own account, and
+  the last remaining admin account cannot be removed (preventing lockout).
+  Cascades by deleting Session rows first, then the User row, in a transaction.
+  Requires admin session.
+*/
 import prisma from '../../lib/prisma'
 import { requireAdminUser } from '../../utils/admin-auth'
 

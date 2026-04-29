@@ -1,3 +1,11 @@
+/* 
+server/api/microcontroller/active.get.ts
+Returns a list of machines that currently have an open MachineUsageSession
+(ended_at IS NULL). Used by the dashboard to highlight which machines are
+running right now. Returns [{ id, name, startedAt }].
+Requires an active user session. 
+*/
+
 import prisma from '../../lib/prisma'
 
 export default defineEventHandler(async (event) => {

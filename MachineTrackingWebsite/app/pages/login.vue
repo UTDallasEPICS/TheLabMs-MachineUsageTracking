@@ -1,3 +1,10 @@
+<!--
+  app/pages/login.vue
+  Login page for regular (non-admin) users.
+  Submits credentials to POST /api/auth/login, then refreshes the session and
+  redirects to the originally requested URL (from ?redirect query param) or
+  the dashboard. Displays rate-limit and credential error messages inline.
+-->
 <script setup lang="ts">
 const route = useRoute()
 const { loggedIn, user, fetch: refreshSession } = useUserSession()

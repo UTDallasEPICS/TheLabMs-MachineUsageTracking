@@ -1,3 +1,13 @@
+<!--
+  app/pages/dashboard.vue
+  Main analytics dashboard for authenticated users.
+  Renders a 7-column monthly calendar Gantt view of machine usage. Each day cell
+  displays proportional colored bars per machine based on total active seconds.
+  Supports month navigation, per-machine visibility filtering via toggle chips,
+  and click-through to the daily timeline page (/timeline/YYYY-MM-DD).
+  Data is fetched from GET /api/microcontroller/calendar on every month change.
+  Requires an active user session (enforced by route middleware).
+-->
 <template>
   <div class="dashboard">
     <!-- ── Header ── -->

@@ -1,3 +1,9 @@
+<!--
+  app/components/Nav.vue
+  Top navigation bar used inside AppHeader.vue.
+  Contains NuxtLink items for Home, Dashboard, and any other global routes.
+  Active link highlighting is handled automatically by Nuxt's router-link-active class.
+-->
 <template>
   <nav class="navbar">
     <ul class="navbar-list">

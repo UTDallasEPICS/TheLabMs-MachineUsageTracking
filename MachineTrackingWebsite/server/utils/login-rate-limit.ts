@@ -1,3 +1,12 @@
+/* 
+server/utils/login-rate-limit.ts
+In-memory brute-force protection for login endpoints (both admin and user).
+Tracks failed login attempts per (IP + email) key in a Map.
+After 6 failures within 10 minutes the key is blocked for 15 minutes and any
+further attempt throws HTTP 429. A successful login clears the failure record.
+Because state lives in-process this resets on server restart and does not
+share across multiple Node instances. 
+*/
 import type { H3Event } from 'h3'
 
 type AttemptWindow = {

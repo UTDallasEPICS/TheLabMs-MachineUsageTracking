@@ -1,3 +1,9 @@
+<!--
+  app/components/AppFooter.vue
+  Site-wide footer rendered by the default layout.
+  Displays a copyright notice. Intentionally minimal — extend here for links
+  or version info as needed.
+-->
 <template>
   <footer class="app-footer">
     <div class="footer-content">

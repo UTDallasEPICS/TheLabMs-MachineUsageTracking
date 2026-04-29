@@ -1,3 +1,15 @@
+/* 
+server/api/microcontroller/calendar.get.ts
+Supplies the monthly calendar view used by dashboard.vue.
+Accepts ?year=YYYY&month=M query params (defaults to current month).
+Fetches all MachineUsageSessions that overlap the requested month, then for
+every day calls calculateSessionSeconds() to clip session durations to exact
+day boundaries (00:00:00 – 23:59:59), preventing cross-midnight sessions from
+over-counting on either adjacent day.
+Returns { year, month, machines[{ id, name, days[{ date, totalSeconds }] }] }.
+Requires an active user session. 
+*/
+
 import prisma from '../../lib/prisma'
 import { calculateSessionSeconds } from '../../utils/session-seconds'
 

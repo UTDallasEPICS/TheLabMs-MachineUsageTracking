@@ -1,3 +1,19 @@
+<!--
+  app/pages/timeline/[date].vue
+  24-hour Gantt chart for a single day, navigated to from dashboard.vue.
+  The date is taken from the dynamic route segment (/timeline/YYYY-MM-DD).
+  Features:
+    • Ctrl+scroll to zoom (up to 500×), plain scroll to pan horizontally.
+    • Dynamic axis ticks that step from 2-hour labels down to millisecond labels
+      as zoom increases, always keeping labels non-overlapping.
+    • Session blocks positioned and sized using server-computed percentages clipped
+      to the day boundary so cross-midnight sessions display correctly.
+    • Hover tooltips showing start time, end time, and duration with ms precision.
+    • Summary table beneath the chart listing session count, total time, and
+      usage percentage for each machine.
+  Data is fetched from GET /api/microcontroller/timeline?date=YYYY-MM-DD.
+  Requires an active user session (enforced by route middleware).
+-->
 <template>
   <div class="timeline-page">
     <div class="timeline-page__header">

@@ -1,3 +1,10 @@
+<!--
+  app/components/AddMachineModal.vue
+  Modal dialog for adding a new machine entry from within the dashboard.
+  Emits 'cancel' when the backdrop or cancel button is clicked, and 'confirm'
+  with the form data when the user submits. The parent is responsible for calling
+  the API and closing the modal after handling the event.
+-->
 <template>
   <div class="modal-backdrop" @click.self="$emit('cancel')">
     <div class="modal">

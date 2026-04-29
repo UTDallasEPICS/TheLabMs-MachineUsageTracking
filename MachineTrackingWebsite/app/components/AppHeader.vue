@@ -1,3 +1,9 @@
+<!--
+  app/components/AppHeader.vue
+  Site-wide top navigation header rendered by the default layout.
+  Displays the lab logo (loaded from the public directory via runtime config baseURL)
+  and the Nav component containing page links.
+-->
 <script setup lang="ts">
 const { app } = useRuntimeConfig()
 const headerLogoSrc = computed(() => `${app.baseURL.replace(/\/$/, '')}/Picture2.png`)

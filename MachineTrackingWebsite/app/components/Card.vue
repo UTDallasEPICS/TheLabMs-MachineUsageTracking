@@ -1,3 +1,11 @@
+<!--
+  app/components/Card.vue
+  Generic glass-style content card used throughout the app.
+  Exposes three named slots:
+    • #title  — optional card heading area
+    • #stats  — main body content (charts, tables, forms, etc.)
+    • #footer — optional action row at the bottom
+-->
 <template>
     <div class="card">
         <div class="card_header">

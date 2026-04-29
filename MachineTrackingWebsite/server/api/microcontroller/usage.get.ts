@@ -1,3 +1,12 @@
+/* 
+server/api/microcontroller/usage.get.ts
+Returns a live usage snapshot for all machines, consumed by the dashboard
+"today" summary cards. For each machine it reports: current on/off state
+(derived from the latest SensorData signal or presence of an open session),
+timestamp of the last signal, and total active seconds/minutes since midnight.
+Requires an active user session. 
+*/
+
 import prisma from '../../lib/prisma'
 import { calculateSessionSeconds } from '../../utils/session-seconds'
 

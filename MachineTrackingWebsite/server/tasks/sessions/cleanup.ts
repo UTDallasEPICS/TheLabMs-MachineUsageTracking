@@ -1,3 +1,12 @@
+/* 
+server/tasks/sessions/cleanup.ts
+Nitro scheduled task (sessions:cleanup) that closes stale MachineUsageSessions.
+A session is considered stale when its started_at is more than 24 hours ago and
+ended_at is still NULL, which indicates the device lost connectivity before
+sending the OFF signal. Each stale session is capped at exactly 24 hours from
+its start time to preserve a realistic usage estimate.
+Configure the schedule in nuxt.config.ts under nitro.scheduledTasks. 
+*/
 import prisma from '../../lib/prisma'
 
 const MAX_SESSION_HOURS = 24

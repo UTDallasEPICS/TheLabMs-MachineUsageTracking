@@ -1,7 +1,11 @@
-/**
- * Calculates active seconds for a session clipped to a given time window.
- * Open sessions (endedAt = null) are treated as ending at dayEnd.
- */
+/* 
+server/utils/session-seconds.ts
+Pure utility used by calendar.get.ts, usage.get.ts, and range-totals.get.ts
+to calculate how many seconds of a MachineUsageSession fall within an arbitrary
+time window. Clips the session's start and end to the window boundaries so that
+sessions spanning midnight are attributed correctly to each day.
+Open sessions (ended_at = null) are passed in as null and treated as ending at windowEnd.
+*/
 export function calculateSessionSeconds(
   startedAt: Date,
   endedAt: Date | null,

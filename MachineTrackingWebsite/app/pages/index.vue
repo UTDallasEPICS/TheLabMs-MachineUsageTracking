@@ -1,3 +1,10 @@
+<!--
+  app/pages/index.vue
+  Public landing page for the Machine Usage Tracking system.
+  Shows a hero section with login/register call-to-action buttons for guests and
+  quick-navigation cards for already-authenticated users. Redirects admins to the
+  admin panel and regular users to the dashboard. No auth is required to view.
+-->
 <script setup lang="ts">
 const { loggedIn, user } = useUserSession()
 
@@ -49,6 +56,9 @@ const isAdmin = computed(() => {
     </div>
 </template>
 
+
+
+// Style for the index.vue page
 <style scoped>
 .home-page {
     display: grid;

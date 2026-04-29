@@ -1,3 +1,11 @@
+/*
+  server/api/admin/password/forgot.post.ts
+  Initiates the admin password-reset flow by generating a signed token and sending
+  a reset link to the supplied email address. Always returns the same success message
+  regardless of whether the email exists, preventing account enumeration.
+  In development mode the reset URL is also returned in the response body for
+  testing without an SMTP server.
+*/
 import prisma from '../../../lib/prisma'
 import { sendAdminResetEmail } from '../../../utils/admin-password-mail'
 import { createAdminResetToken, getAdminResetTtlMinutes } from '../../../utils/admin-password-reset'

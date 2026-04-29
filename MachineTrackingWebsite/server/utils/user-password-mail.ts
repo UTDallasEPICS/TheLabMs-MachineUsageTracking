@@ -1,3 +1,10 @@
+/* 
+server/utils/user-password-mail.ts
+Sends the password-reset email to a regular user account via SMTP (nodemailer).
+Falls back to a console.info log when SMTP environment variables are absent,
+allowing the reset flow to be tested locally without a mail server. 
+*/
+
 export async function sendUserResetEmail(to: string, resetUrl: string): Promise<void> {
   const smtpHost = process.env.SMTP_HOST
   const smtpPort = Number(process.env.SMTP_PORT || 587)

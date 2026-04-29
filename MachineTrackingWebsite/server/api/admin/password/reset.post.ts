@@ -1,3 +1,10 @@
+/*
+  server/api/admin/password/reset.post.ts
+  Completes the admin password-reset flow. Verifies the signed token from the
+  reset link, hashes the new password, updates the database, and then invalidates
+  all existing sessions for that admin in a single transaction so any stolen
+  session cookies stop working immediately.
+*/
 import { hash } from 'bcrypt-ts'
 import prisma from '../../../lib/prisma'
 import { verifyAdminResetToken } from '../../../utils/admin-password-reset'

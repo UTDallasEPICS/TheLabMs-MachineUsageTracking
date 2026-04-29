@@ -1,3 +1,10 @@
+<!--
+  app/pages/reset-password.vue
+  Password-reset completion page for regular users.
+  Reads the signed token from the ?token query param (placed there by the email link)
+  and submits it along with the new password to POST /api/auth/password/reset.
+  Shows an error if the token is missing, invalid, or expired.
+-->
 <script setup lang="ts">
 const route = useRoute()
 

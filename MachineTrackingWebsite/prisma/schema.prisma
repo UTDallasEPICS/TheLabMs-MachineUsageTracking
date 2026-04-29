@@ -1,3 +1,15 @@
+// prisma/schema.prisma
+// Single source of truth for the SQLite database schema.
+//
+// Models:
+//   PendingUser         — signup requests awaiting admin approval (email + bcrypt hash)
+//   User                — approved accounts; role is 'admin' or 'user'
+//   Session             — server-side session records managed by nuxt-auth-utils
+//   Microcontroller     — registered IoT devices; holds API key and isAC mode flag
+//   SensorData          — raw ON/OFF signal log from each device, includes isAC at time of reading
+//   MachineUsageSession — logical usage spans derived from SensorData signals;
+//                         ended_at = NULL means the session is still open
+
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"

@@ -1,3 +1,10 @@
+<!--
+  app/pages/admin/login.vue
+  Login page exclusively for admin accounts.
+  Submits to POST /api/admin/login and redirects to /admin on success.
+  Uses the 'admin-login' middleware to redirect already-authenticated admins away
+  from this page. Displays rate-limit and credential error messages inline.
+-->
 <script setup lang="ts">
 definePageMeta({ middleware: 'admin-login' })
 

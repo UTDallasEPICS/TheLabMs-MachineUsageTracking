@@ -1,3 +1,11 @@
+/*
+  server/api/admin/microcontroller.post.ts
+  Registers a new microcontroller device with a name and an API key.
+  If no apiKey is supplied in the request body a random 16-character alphanumeric
+  key is generated automatically. Validates that the key is alphanumeric and unique.
+  Returns the created record including the plain-text key so it can be copied once.
+  Requires admin session.
+*/
 import prisma from '../../lib/prisma'
 import { requireAdminUser } from '../../utils/admin-auth'
 

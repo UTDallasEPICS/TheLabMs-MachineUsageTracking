@@ -1,3 +1,10 @@
+/*
+  server/api/admin/login.post.ts
+  Authenticates an admin user with email + password and creates a server-side
+  session cookie via nuxt-auth-utils setUserSession().
+  Only accounts with role === 'admin' are accepted. Failed attempts are tracked
+  by login-rate-limit to prevent brute-force attacks.
+*/
 import { compare } from 'bcrypt-ts'
 import prisma from '../../lib/prisma'
 import { assertLoginNotBlocked, clearLoginFailures, recordFailedLogin } from '../../utils/login-rate-limit'

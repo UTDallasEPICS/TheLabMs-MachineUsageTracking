@@ -1,3 +1,14 @@
+<!--
+  app/pages/admin/index.vue
+  Main admin control panel.
+  Contains three directory views selectable via a dropdown:
+    • Microcontrollers — register/remove devices, copy API keys, toggle AC/DC mode.
+    • Users — search and remove approved user accounts.
+    • Pending Signups — approve or deny new account requests.
+  Overview cards at the top show admin email, role, pending-request count, and
+  total machine count fetched from GET /api/admin/me.
+  Requires admin session (enforced by 'admin' middleware).
+-->
 <script setup lang="ts">
 definePageMeta({ middleware: 'admin' })
 

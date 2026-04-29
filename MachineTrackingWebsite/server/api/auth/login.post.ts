@@ -1,3 +1,10 @@
+/* 
+server/api/auth/login.post.ts
+Authenticates a regular user with email + password and issues a session cookie.
+Accepts any role — role-specific access control is enforced downstream by
+requireAdminUser() on admin routes. Failed attempts feed the rate-limiter to
+prevent brute-force attacks. 
+*/
 import { compare } from 'bcrypt-ts'
 import prisma from '../../lib/prisma'
 import { assertLoginNotBlocked, clearLoginFailures, recordFailedLogin } from '../../utils/login-rate-limit'

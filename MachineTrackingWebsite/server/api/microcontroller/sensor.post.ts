@@ -1,3 +1,14 @@
+/* 
+server/api/microcontroller/sensor.post.ts
+Primary data-ingestion endpoint called by physical microcontrollers.
+Accepts a machine_state signal (boolean / 0-1 / on-off string) and writes a
+SensorData row. Within the same transaction it auto-manages MachineUsageSession:
+a TRUE signal opens a new session (if none is already open), a FALSE signal
+closes all open sessions for this device. The isAC value is copied from the
+Microcontroller record so each raw reading carries the current AC/DC mode.
+Requires a valid x-api-key header (enforced by microcontroller-auth middleware). 
+*/
+
 import prisma from '../../../server/lib/prisma'
 
 function parseMachineState(value: unknown): boolean | null {

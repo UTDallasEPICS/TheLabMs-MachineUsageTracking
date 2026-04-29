@@ -1,3 +1,10 @@
+/* 
+server/api/auth/password/forgot.post.ts
+Initiates the regular-user password-reset flow. Generates a signed token and
+emails a reset link. Always returns success to prevent account enumeration.
+In development mode the reset URL is returned in the response for easy testing. 
+*/
+
 import prisma from '../../../lib/prisma'
 import { sendUserResetEmail } from '../../../utils/user-password-mail'
 import { createUserResetToken, getUserResetTtlMinutes } from '../../../utils/user-password-reset'

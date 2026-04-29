@@ -1,3 +1,10 @@
+/*
+  server/api/admin/microcontroller.delete.ts
+  Permanently removes a microcontroller and all of its historical data.
+  Deletes in dependency order within a transaction: SensorData rows first,
+  then MachineUsageSession rows, then the Microcontroller record itself.
+  Requires admin session.
+*/
 import prisma from '../../lib/prisma'
 import { requireAdminUser } from '../../utils/admin-auth'
 

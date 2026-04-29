@@ -1,3 +1,10 @@
+<!--
+  app/pages/admin/reset-password.vue
+  Password-reset completion page for admin accounts.
+  Reads the signed token from the ?token query param and submits it with the new
+  password to POST /api/admin/password/reset. On success the admin is redirected
+  to /admin/login. Shows an error if the token is invalid or expired.
+-->
 <script setup lang="ts">
 const route = useRoute()
 
