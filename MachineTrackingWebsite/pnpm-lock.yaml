@@ -27,7 +27,7 @@ importers:
         specifier: ^17.3.1
         version: 17.3.1
       nodemailer:
-        specifier: ^6.10.0
+        specifier: ^6.10.1
         version: 6.10.1
       nuxt:
         specifier: ^4.4.2

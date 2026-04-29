@@ -52,7 +52,7 @@ model Session {
 model Microcontroller {
   id             Int                   @id @default(autoincrement())
   name           String
-  api_key        String                @unique  // ✅ changed from Int to String
+  api_key        String                @unique 
   created_at     DateTime              @default(now())
   isAC           Boolean               @default(false)
   sensor_data    SensorData[]          @relation("MicrocontrollerData")
@@ -67,7 +67,7 @@ model SensorData {
   timestamp          DateTime        @default(now())
   isAC               Boolean
 
-  @@index([microcontroller_id, timestamp])  // ✅ added for query performance
+  @@index([microcontroller_id, timestamp]) 
 }
 
 model MachineUsageSession {
@@ -76,7 +76,6 @@ model MachineUsageSession {
   microcontroller    Microcontroller @relation(fields: [microcontroller_id], references: [id])
   started_at         DateTime
   ended_at           DateTime?
-  // ✅ removed duration_seconds — compute from ended_at - started_at instead
 
   @@index([microcontroller_id, ended_at])
   @@index([started_at])
