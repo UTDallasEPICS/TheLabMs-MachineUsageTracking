@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* 
 server/utils/admin-password-mail.ts
 Sends the password-reset email to an admin account via SMTP (nodemailer).
@@ -6,9 +5,8 @@ When SMTP environment variables (SMTP_HOST, SMTP_USER, SMTP_PASS, MAIL_FROM)
 are not set the function falls back to printing the reset link to the server
 console, which is useful for local development without a mail server. 
 */
-=======
+
 import { sendMail } from '../lib/mailer'
->>>>>>> a803501a6e0793eb48f6102405012c0549b390be
 
 export async function sendAdminResetEmail(to: string, resetUrl: string): Promise<void> {
   const subject = 'Admin password reset'
