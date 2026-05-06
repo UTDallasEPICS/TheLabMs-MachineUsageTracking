@@ -7,3 +7,4 @@
 - PCB files
 ### Website/
 - Contains Nuxt.js files
+- [Machine Tracking Website README.md](MachineTrackingWebsite/README.md)
